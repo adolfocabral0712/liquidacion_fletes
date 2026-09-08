@@ -54,7 +54,7 @@
 
       <section class="seccion">
         <div class="titulo-fila"><h2>Detalle de fletes</h2><button type="button" id="exportarExcel" class="boton">Exportar XLSX</button></div>
-        <div class="tabla-wrap"><table><thead><tr><th>Fecha</th><th>Remito</th><th>Origen</th><th>Remito origen</th><th>Fletero</th><th>Matrícula</th><th>Producto</th><th class="numero">Neto</th><th class="numero">Neto flete</th><th class="numero">Tarifa</th><th class="numero">Importe flete</th></tr></thead><tbody id="tablaFletes"></tbody></table></div>
+        <div class="tabla-wrap"><table><thead><tr id="encabezadosFletes"></tr></thead><tbody id="tablaFletes"></tbody></table></div>
         <div class="pie-tabla"><span id="cantidadFletes"></span><div class="paginacion"><button type="button" id="paginaAnterior">Anterior</button><span id="paginaActual"></span><button type="button" id="paginaSiguiente">Siguiente</button></div></div>
       </section>
     </div>
@@ -98,14 +98,16 @@
       const s=seleccion();pagina=1;
       const control=datos.control.filter(r=>coincidePeriodo(r,s));
       const diferencias=datos.diferencias.filter(r=>coincidePeriodo(r,s));
+      const controlesEnCero=control.filter(r=>numero(r.toneladas_remitos2)<=0||numero(r.toneladas_liquidacion)<=0).map(r=>({...r,estado:numero(r.toneladas_remitos2)<=0&&numero(r.toneladas_liquidacion)<=0?'TONELADAS EN CERO':numero(r.toneladas_remitos2)<=0?'TONELADAS REMITOS2 EN CERO':'TONELADAS LIQUIDACIÓN EN CERO',fecha_rto:null,remito:'—',remito_origen:'—',matricula:'—'}));
+      const diferenciasVisibles=[...diferencias,...controlesEnCero.filter(c=>!diferencias.some(d=>String(d.origen)===String(c.origen)&&String(d.estado).includes('CERO')))];
       fletesFiltrados=datos.fletes.filter(r=>coincidePeriodo(r,s));
-      renderControl(control,diferencias);renderDiferencias(diferencias);renderFletes();
+      renderControl(control,diferenciasVisibles);renderDiferencias(diferenciasVisibles);renderFletes();
     }
     function renderControl(control,diferencias){
       const vr=control.reduce((a,r)=>a+numero(r.viajes_remitos2),0),vl=control.reduce((a,r)=>a+numero(r.viajes_liquidacion),0),td=control.reduce((a,r)=>a+numero(r.diferencia_toneladas),0);
       $('viajesRemitos2').textContent=entero(vr);$('viajesLiquidacion').textContent=entero(vl);$('diferenciaViajes').textContent=entero(vr-vl);$('diferenciaToneladas').textContent=decimal(td);
-      const ok=diferencias.length===0&&vr===vl&&Math.abs(td)<=.05;$('estadoGeneral').textContent=ok?'● CONTINUAR':'● VERIFICAR';$('estadoGeneral').className=`estado ${ok?'ok':'error'}`;
-      $('tablaControl').innerHTML=control.map(r=>`<tr><td>${seguro(r.origen)}</td><td class="numero">${entero(r.viajes_remitos2)}</td><td class="numero">${entero(r.viajes_liquidacion)}</td><td class="numero">${decimal(r.toneladas_remitos2)}</td><td class="numero">${decimal(r.toneladas_liquidacion)}</td><td class="numero">${decimal(r.diferencia_toneladas)}</td><td class="centro"><span class="etiqueta ${r.estado==='CONTINUAR'?'ok':'error'}">${seguro(r.estado)}</span></td></tr>`).join('')||'<tr><td colspan="7" class="centro">Sin datos para el período.</td></tr>';
+      const ok=control.length>0&&vr>0&&vl>0&&diferencias.length===0&&vr===vl&&Math.abs(td)<=.05;$('estadoGeneral').textContent=ok?'● CONTINUAR':'● VERIFICAR';$('estadoGeneral').className=`estado ${ok?'ok':'error'}`;
+      $('tablaControl').innerHTML=control.map(r=>{const enCero=numero(r.toneladas_remitos2)<=0||numero(r.toneladas_liquidacion)<=0;const estado=enCero?(numero(r.toneladas_remitos2)<=0&&numero(r.toneladas_liquidacion)<=0?'TONELADAS EN CERO':numero(r.toneladas_remitos2)<=0?'TON. REMITOS2 EN CERO':'TON. LIQUIDACIÓN EN CERO'):r.estado;return `<tr><td>${seguro(r.origen)}</td><td class="numero">${entero(r.viajes_remitos2)}</td><td class="numero">${entero(r.viajes_liquidacion)}</td><td class="numero">${decimal(r.toneladas_remitos2)}</td><td class="numero">${decimal(r.toneladas_liquidacion)}</td><td class="numero">${decimal(r.diferencia_toneladas)}</td><td class="centro"><span class="etiqueta ${estado==='CONTINUAR'?'ok':'error'}">${seguro(estado)}</span></td></tr>`;}).join('')||'<tr><td colspan="7" class="centro">Sin datos para el período.</td></tr>';
     }
     function renderDiferencias(lista){
       $('cantidadDiferencias').textContent=`${entero(lista.length)} registros`;$('sinDiferencias').hidden=lista.length>0;$('conDiferencias').hidden=lista.length===0;
@@ -113,13 +115,19 @@
     }
     function renderFletes(){
       const totalPaginas=Math.max(1,Math.ceil(fletesFiltrados.length/FILAS_POR_PAGINA));pagina=Math.min(pagina,totalPaginas);const inicio=(pagina-1)*FILAS_POR_PAGINA;const visibles=fletesFiltrados.slice(inicio,inicio+FILAS_POR_PAGINA);
-      $('tablaFletes').innerHTML=visibles.map(r=>`<tr><td>${fecha(r.fecha_rto)}</td><td>${seguro(r.remito)}</td><td>${seguro(r.origen)}</td><td>${seguro(r.remito_origen)}</td><td>${seguro(r.nombre_fletero)}</td><td>${seguro(r.matricula)}</td><td>${seguro(r.nombre_prod)}</td><td class="numero">${decimal(numero(r.neto)/1000,3)}</td><td class="numero">${decimal(numero(r.neto_flete)/1000,3)}</td><td class="numero">${decimal(r.importe_tarifa,2)}</td><td class="numero">${decimal(r.importe_flete,2)}</td></tr>`).join('')||'<tr><td colspan="11" class="centro">Sin fletes para el período.</td></tr>';
+      const columnas=datos.fletes.length?Object.keys(datos.fletes[0]):[];
+      $('encabezadosFletes').innerHTML=columnas.map(columna=>`<th>${seguro(columna.replaceAll('_',' ').toUpperCase())}</th>`).join('');
+      const mostrarValor=(valor,columna)=>{if(valor===null||valor===undefined||valor==='')return '—';if(columna.includes('fecha'))return fecha(valor);if(typeof valor==='number')return valor.toLocaleString('es-UY',{maximumFractionDigits:3});return texto(valor);};
+      $('tablaFletes').innerHTML=visibles.map(r=>`<tr>${columnas.map(columna=>`<td>${seguro(mostrarValor(r[columna],columna))}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${Math.max(1,columnas.length)}" class="centro">Sin fletes para el período.</td></tr>`;
       $('cantidadFletes').textContent=`${entero(fletesFiltrados.length)} fletes filtrados`;$('paginaActual').textContent=`Página ${pagina} de ${totalPaginas}`;$('paginaAnterior').disabled=pagina<=1;$('paginaSiguiente').disabled=pagina>=totalPaginas;$('exportarExcel').disabled=fletesFiltrados.length===0;
     }
     function exportarXlsx(){
       if(!window.XLSX){alert('No fue posible cargar el exportador de Excel.');return;}const s=seleccion();
-      const filas=fletesFiltrados.map(r=>({'Fecha':fecha(r.fecha_rto),'Año':r.anio_liquidacion,'Mes':r.mes_nombre,'Quincena':r.quincena,'Remito':r.remito,'Origen':r.origen,'Remito origen':r.remito_origen,'Fletero':r.nombre_fletero,'Matrícula':r.matricula,'Producto':r.nombre_prod,'Bruto':numero(r.bruto),'Tara':numero(r.tara),'Neto':numero(r.neto),'Bruto MTOP':numero(r.bruto_mtop),'Neto flete':numero(r.neto_flete),'Tarifa':numero(r.importe_tarifa),'Importe flete':numero(r.importe_flete),'Paga flete':r.paga_flete}));
-      const hoja=XLSX.utils.json_to_sheet(filas);hoja['!cols']=[{wch:12},{wch:8},{wch:14},{wch:10},{wch:12},{wch:42},{wch:16},{wch:30},{wch:14},{wch:25},{wch:12},{wch:12},{wch:12},{wch:14},{wch:14},{wch:12},{wch:16},{wch:12}];const libro=XLSX.utils.book_new();XLSX.utils.book_append_sheet(libro,hoja,'Fletes');XLSX.writeFile(libro,`Fletes_${s.anio}_${String(s.mes).padStart(2,'0')}_Q${s.quincena}.xlsx`);
+      const filas=fletesFiltrados.map(registro=>({...registro}));
+      const hoja=XLSX.utils.json_to_sheet(filas);
+      const columnas=filas.length?Object.keys(filas[0]):[];
+      hoja['!cols']=columnas.map(columna=>({wch:Math.min(45,Math.max(columna.length+2,...filas.slice(0,500).map(fila=>String(fila[columna]??'').length+2)))}));
+      const libro=XLSX.utils.book_new();XLSX.utils.book_append_sheet(libro,hoja,'Fletes');XLSX.writeFile(libro,`Fletes_${s.anio}_${String(s.mes).padStart(2,'0')}_Q${s.quincena}.xlsx`);
     }
     async function iniciar(){
       try{const respuesta=await fetch(API_URL,{cache:'no-store'});if(!respuesta.ok)throw new Error(`Error ${respuesta.status}`);const recibido=await respuesta.json();datos={control:Array.isArray(recibido.control)?recibido.control:[],diferencias:Array.isArray(recibido.diferencias)?recibido.diferencias:[],fletes:Array.isArray(recibido.fletes)?recibido.fletes:[],periodos:Array.isArray(recibido.periodos)?recibido.periodos:[]};if(!datos.periodos.length)throw new Error('El JSON no contiene períodos.');$('actualizado').textContent=`Actualizado: ${texto(recibido.fecha_actualizacion)}`;cargarCombos();$('cargando').hidden=true;$('contenido').hidden=false;
