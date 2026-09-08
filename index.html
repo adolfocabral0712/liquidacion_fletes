@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#123c2b">
+  <title>Liquidación de fletes</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+  <style>
+    :root{--verde:#123c2b;--verde2:#1f6848;--verde-suave:#e7f3eb;--fondo:#f3f6f4;--blanco:#fff;--texto:#17231c;--muted:#68756e;--borde:#d8e2dc;--rojo:#b42318;--rojo-suave:#fff0ee;--amarillo:#9a6700;--sombra:0 8px 24px rgba(18,60,43,.08)}
+    *{box-sizing:border-box}body{margin:0;background:var(--fondo);color:var(--texto);font-family:Arial,Helvetica,sans-serif;font-size:15px}button,select{font:inherit}
+    header{background:var(--verde);color:#fff;border-bottom:5px solid #62aa79;padding:18px 24px}.cabecera{max-width:1800px;margin:auto;display:flex;justify-content:space-between;align-items:end;gap:18px}.cabecera h1{font-size:25px;margin:0 0 4px}.cabecera p{margin:0;color:#b9d9c4}.actualizado{white-space:nowrap;color:#d5e9dc;font-size:13px}
+    main{max-width:1800px;margin:0 auto;padding:20px 24px 40px}.filtros{display:grid;grid-template-columns:repeat(3,minmax(160px,240px));gap:12px;margin-bottom:20px}.campo{display:grid;gap:6px}.campo label{font-weight:700;font-size:13px;color:var(--muted)}select{width:100%;min-height:42px;padding:8px 34px 8px 11px;border:1px solid var(--borde);border-radius:8px;background:var(--blanco);color:var(--texto)}
+    .seccion{margin-top:24px}.titulo-fila{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}.titulo-fila h2{font-size:19px;margin:0}.estado{font-weight:800;font-size:14px}.estado.ok{color:var(--verde2)}.estado.error{color:var(--rojo)}
+    .tarjetas{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin-bottom:18px}.tarjeta{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:15px;box-shadow:var(--sombra);text-align:center}.tarjeta .rotulo{color:var(--muted);font-size:13px;margin-bottom:7px}.tarjeta .valor{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+    .tabla-wrap{overflow:auto;background:var(--blanco);border:1px solid var(--borde);border-radius:10px;box-shadow:var(--sombra)}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:10px 11px;border-bottom:1px solid var(--borde);text-align:left;vertical-align:middle}th{position:sticky;top:0;background:#edf3ef;color:#34453b;font-size:12px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}tbody tr:hover{background:#f7faf8}td.numero,th.numero{text-align:right;font-variant-numeric:tabular-nums}td.centro,th.centro{text-align:center}.etiqueta{font-size:12px;font-weight:800;white-space:nowrap}.etiqueta.ok{color:var(--verde2)}.etiqueta.error{color:var(--rojo)}
+    .aviso{padding:18px;border-radius:10px;text-align:center;font-weight:700}.aviso.ok{background:var(--verde-suave);color:var(--verde2)}.aviso.error{background:var(--rojo-suave);color:var(--rojo)}
+    .boton{border:0;border-radius:8px;min-height:40px;padding:9px 14px;background:var(--verde);color:#fff;font-weight:700;cursor:pointer}.boton:hover{background:var(--verde2)}.boton:disabled{opacity:.55;cursor:not-allowed}.pie-tabla{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:9px;color:var(--muted);font-size:13px}.paginacion{display:flex;align-items:center;gap:8px}.paginacion button{border:1px solid var(--borde);border-radius:7px;background:var(--blanco);color:var(--texto);padding:6px 10px;cursor:pointer}.paginacion button:disabled{opacity:.45;cursor:not-allowed}
+    .cargando,.error-carga{max-width:700px;margin:60px auto;padding:22px;text-align:center;border-radius:10px;background:var(--blanco);border:1px solid var(--borde)}.error-carga{color:var(--rojo)}[hidden]{display:none!important}
+    @media(max-width:900px){.tarjetas{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:620px){body{font-size:14px}header{padding:15px}.cabecera{align-items:flex-start;flex-direction:column}.actualizado{white-space:normal}main{padding:15px 12px 30px}.filtros{grid-template-columns:1fr 1fr}.campo:last-child{grid-column:1/-1}.tarjetas{grid-template-columns:1fr 1fr;gap:8px}.tarjeta{padding:12px 8px}.tarjeta .valor{font-size:20px}.titulo-fila{align-items:flex-start;flex-direction:column}.pie-tabla{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="cabecera"><div><h1>Liquidación de fletes</h1><p>Control de viajes, toneladas y detalle liquidado</p></div><div class="actualizado" id="actualizado">Actualizando…</div></div>
+  </header>
+  <main>
+    <div id="cargando" class="cargando">Cargando información…</div>
+    <div id="errorCarga" class="error-carga" hidden></div>
+    <div id="contenido" hidden>
+      <section class="filtros" aria-label="Filtros del período">
+        <div class="campo"><label for="filtroAnio">Año</label><select id="filtroAnio"></select></div>
+        <div class="campo"><label for="filtroMes">Mes</label><select id="filtroMes"></select></div>
+        <div class="campo"><label for="filtroQuincena">Quincena</label><select id="filtroQuincena"></select></div>
+      </section>
+
+      <section>
+        <div class="titulo-fila"><h2>Control remitos2 vs. liquidación</h2><div id="estadoGeneral" class="estado"></div></div>
+        <div class="tarjetas">
+          <article class="tarjeta"><div class="rotulo">Viajes remitos2</div><div class="valor" id="viajesRemitos2">0</div></article>
+          <article class="tarjeta"><div class="rotulo">Viajes liquidados</div><div class="valor" id="viajesLiquidacion">0</div></article>
+          <article class="tarjeta"><div class="rotulo">Diferencia de viajes</div><div class="valor" id="diferenciaViajes">0</div></article>
+          <article class="tarjeta"><div class="rotulo">Diferencia de toneladas</div><div class="valor" id="diferenciaToneladas">0,00</div></article>
+        </div>
+        <div class="tabla-wrap"><table><thead><tr><th>Origen</th><th class="numero">Viajes remitos2</th><th class="numero">Liquidados</th><th class="numero">Ton. remitos2</th><th class="numero">Ton. liquidadas</th><th class="numero">Diferencia</th><th class="centro">Estado</th></tr></thead><tbody id="tablaControl"></tbody></table></div>
+      </section>
+
+      <section class="seccion">
+        <div class="titulo-fila"><h2>Registros a verificar</h2><div id="cantidadDiferencias"></div></div>
+        <div id="sinDiferencias" class="aviso ok">No existen diferencias para el período seleccionado.</div>
+        <div id="conDiferencias" class="tabla-wrap" hidden><table><thead><tr><th>Estado</th><th>Fecha</th><th>Remito</th><th>Origen</th><th>Remito origen</th><th>Matrícula</th><th class="numero">Ton. remitos2</th><th class="numero">Ton. liquidación</th><th class="numero">Diferencia</th></tr></thead><tbody id="tablaDiferencias"></tbody></table></div>
+      </section>
+
+      <section class="seccion">
+        <div class="titulo-fila"><h2>Detalle de fletes</h2><button type="button" id="exportarExcel" class="boton">Exportar XLSX</button></div>
+        <div class="tabla-wrap"><table><thead><tr><th>Fecha</th><th>Remito</th><th>Origen</th><th>Remito origen</th><th>Fletero</th><th>Matrícula</th><th>Producto</th><th class="numero">Neto</th><th class="numero">Neto flete</th><th class="numero">Tarifa</th><th class="numero">Importe flete</th></tr></thead><tbody id="tablaFletes"></tbody></table></div>
+        <div class="pie-tabla"><span id="cantidadFletes"></span><div class="paginacion"><button type="button" id="paginaAnterior">Anterior</button><span id="paginaActual"></span><button type="button" id="paginaSiguiente">Siguiente</button></div></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const API_URL='https://dl.dropbox.com/scl/fi/p7nm1n8fhpwywmpsezgcm/LiquidacionFletes.json?rlkey=1ahcdu32o7s10icry9hllu81f&dl=1';
+    const FILAS_POR_PAGINA=100;
+    let datos={control:[],diferencias:[],fletes:[],periodos:[]};
+    let fletesFiltrados=[];
+    let pagina=1;
+    const $=id=>document.getElementById(id);
+    const numero=v=>Number(v||0);
+    const entero=v=>numero(v).toLocaleString('es-UY',{maximumFractionDigits:0});
+    const decimal=(v,d=2)=>numero(v).toLocaleString('es-UY',{minimumFractionDigits:d,maximumFractionDigits:d});
+    const fecha=v=>{if(!v)return '—';const p=String(v).slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:v};
+    const texto=v=>v===null||v===undefined||v===''?'—':String(v);
+    const seguro=v=>texto(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    const seleccion=()=>({anio:Number($('filtroAnio').value),mes:Number($('filtroMes').value),quincena:Number($('filtroQuincena').value)});
+    const coincidePeriodo=(r,s)=>Number(r.anio_liquidacion)===s.anio&&Number(r.mes_liquidacion)===s.mes&&Number(r.quincena)===s.quincena;
+
+    function cargarCombos(){
+      const periodos=[...datos.periodos].sort((a,b)=>Number(b.anio_liquidacion)-Number(a.anio_liquidacion)||Number(b.mes_liquidacion)-Number(a.mes_liquidacion)||Number(b.quincena)-Number(a.quincena));
+      const anios=[...new Set(periodos.map(p=>Number(p.anio_liquidacion)))];
+      $('filtroAnio').innerHTML=anios.map(a=>`<option value="${a}">${a}</option>`).join('');
+      actualizarMeses(false);
+    }
+    function actualizarMeses(mantener=true){
+      const anio=Number($('filtroAnio').value);const previo=mantener?$('filtroMes').value:null;
+      const meses=[...new Map(datos.periodos.filter(p=>Number(p.anio_liquidacion)===anio).map(p=>[Number(p.mes_liquidacion),p.mes_nombre])).entries()].sort((a,b)=>b[0]-a[0]);
+      $('filtroMes').innerHTML=meses.map(([n,nombre])=>`<option value="${n}" ${String(n)===previo?'selected':''}>${seguro(nombre)}</option>`).join('');
+      actualizarQuincenas(false);
+    }
+    function actualizarQuincenas(mantener=true){
+      const anio=Number($('filtroAnio').value),mes=Number($('filtroMes').value),previo=mantener?$('filtroQuincena').value:null;
+      const qs=[...new Set(datos.periodos.filter(p=>Number(p.anio_liquidacion)===anio&&Number(p.mes_liquidacion)===mes).map(p=>Number(p.quincena)))].sort((a,b)=>b-a);
+      $('filtroQuincena').innerHTML=qs.map(q=>`<option value="${q}" ${String(q)===previo?'selected':''}>${q}.ª QUINCENA</option>`).join('');
+      aplicarFiltros();
+    }
+    function aplicarFiltros(){
+      const s=seleccion();pagina=1;
+      const control=datos.control.filter(r=>coincidePeriodo(r,s));
+      const diferencias=datos.diferencias.filter(r=>coincidePeriodo(r,s));
+      fletesFiltrados=datos.fletes.filter(r=>coincidePeriodo(r,s));
+      renderControl(control,diferencias);renderDiferencias(diferencias);renderFletes();
+    }
+    function renderControl(control,diferencias){
+      const vr=control.reduce((a,r)=>a+numero(r.viajes_remitos2),0),vl=control.reduce((a,r)=>a+numero(r.viajes_liquidacion),0),td=control.reduce((a,r)=>a+numero(r.diferencia_toneladas),0);
+      $('viajesRemitos2').textContent=entero(vr);$('viajesLiquidacion').textContent=entero(vl);$('diferenciaViajes').textContent=entero(vr-vl);$('diferenciaToneladas').textContent=decimal(td);
+      const ok=diferencias.length===0&&vr===vl&&Math.abs(td)<=.05;$('estadoGeneral').textContent=ok?'● CONTINUAR':'● VERIFICAR';$('estadoGeneral').className=`estado ${ok?'ok':'error'}`;
+      $('tablaControl').innerHTML=control.map(r=>`<tr><td>${seguro(r.origen)}</td><td class="numero">${entero(r.viajes_remitos2)}</td><td class="numero">${entero(r.viajes_liquidacion)}</td><td class="numero">${decimal(r.toneladas_remitos2)}</td><td class="numero">${decimal(r.toneladas_liquidacion)}</td><td class="numero">${decimal(r.diferencia_toneladas)}</td><td class="centro"><span class="etiqueta ${r.estado==='CONTINUAR'?'ok':'error'}">${seguro(r.estado)}</span></td></tr>`).join('')||'<tr><td colspan="7" class="centro">Sin datos para el período.</td></tr>';
+    }
+    function renderDiferencias(lista){
+      $('cantidadDiferencias').textContent=`${entero(lista.length)} registros`;$('sinDiferencias').hidden=lista.length>0;$('conDiferencias').hidden=lista.length===0;
+      $('tablaDiferencias').innerHTML=lista.map(r=>`<tr><td><span class="etiqueta error">${seguro(r.estado)}</span></td><td>${fecha(r.fecha_rto)}</td><td>${seguro(r.remito)}</td><td>${seguro(r.origen)}</td><td>${seguro(r.remito_origen)}</td><td>${seguro(r.matricula)}</td><td class="numero">${decimal(r.toneladas_remitos2)}</td><td class="numero">${decimal(r.toneladas_liquidacion)}</td><td class="numero">${decimal(r.diferencia_toneladas)}</td></tr>`).join('');
+    }
+    function renderFletes(){
+      const totalPaginas=Math.max(1,Math.ceil(fletesFiltrados.length/FILAS_POR_PAGINA));pagina=Math.min(pagina,totalPaginas);const inicio=(pagina-1)*FILAS_POR_PAGINA;const visibles=fletesFiltrados.slice(inicio,inicio+FILAS_POR_PAGINA);
+      $('tablaFletes').innerHTML=visibles.map(r=>`<tr><td>${fecha(r.fecha_rto)}</td><td>${seguro(r.remito)}</td><td>${seguro(r.origen)}</td><td>${seguro(r.remito_origen)}</td><td>${seguro(r.nombre_fletero)}</td><td>${seguro(r.matricula)}</td><td>${seguro(r.nombre_prod)}</td><td class="numero">${decimal(numero(r.neto)/1000,3)}</td><td class="numero">${decimal(numero(r.neto_flete)/1000,3)}</td><td class="numero">${decimal(r.importe_tarifa,2)}</td><td class="numero">${decimal(r.importe_flete,2)}</td></tr>`).join('')||'<tr><td colspan="11" class="centro">Sin fletes para el período.</td></tr>';
+      $('cantidadFletes').textContent=`${entero(fletesFiltrados.length)} fletes filtrados`;$('paginaActual').textContent=`Página ${pagina} de ${totalPaginas}`;$('paginaAnterior').disabled=pagina<=1;$('paginaSiguiente').disabled=pagina>=totalPaginas;$('exportarExcel').disabled=fletesFiltrados.length===0;
+    }
+    function exportarXlsx(){
+      if(!window.XLSX){alert('No fue posible cargar el exportador de Excel.');return;}const s=seleccion();
+      const filas=fletesFiltrados.map(r=>({'Fecha':fecha(r.fecha_rto),'Año':r.anio_liquidacion,'Mes':r.mes_nombre,'Quincena':r.quincena,'Remito':r.remito,'Origen':r.origen,'Remito origen':r.remito_origen,'Fletero':r.nombre_fletero,'Matrícula':r.matricula,'Producto':r.nombre_prod,'Bruto':numero(r.bruto),'Tara':numero(r.tara),'Neto':numero(r.neto),'Bruto MTOP':numero(r.bruto_mtop),'Neto flete':numero(r.neto_flete),'Tarifa':numero(r.importe_tarifa),'Importe flete':numero(r.importe_flete),'Paga flete':r.paga_flete}));
+      const hoja=XLSX.utils.json_to_sheet(filas);hoja['!cols']=[{wch:12},{wch:8},{wch:14},{wch:10},{wch:12},{wch:42},{wch:16},{wch:30},{wch:14},{wch:25},{wch:12},{wch:12},{wch:12},{wch:14},{wch:14},{wch:12},{wch:16},{wch:12}];const libro=XLSX.utils.book_new();XLSX.utils.book_append_sheet(libro,hoja,'Fletes');XLSX.writeFile(libro,`Fletes_${s.anio}_${String(s.mes).padStart(2,'0')}_Q${s.quincena}.xlsx`);
+    }
+    async function iniciar(){
+      try{const respuesta=await fetch(API_URL,{cache:'no-store'});if(!respuesta.ok)throw new Error(`Error ${respuesta.status}`);const recibido=await respuesta.json();datos={control:Array.isArray(recibido.control)?recibido.control:[],diferencias:Array.isArray(recibido.diferencias)?recibido.diferencias:[],fletes:Array.isArray(recibido.fletes)?recibido.fletes:[],periodos:Array.isArray(recibido.periodos)?recibido.periodos:[]};if(!datos.periodos.length)throw new Error('El JSON no contiene períodos.');$('actualizado').textContent=`Actualizado: ${texto(recibido.fecha_actualizacion)}`;cargarCombos();$('cargando').hidden=true;$('contenido').hidden=false;
+      }catch(error){$('cargando').hidden=true;$('errorCarga').hidden=false;$('errorCarga').textContent=`No fue posible cargar los datos. ${error.message}`;}}
+    $('filtroAnio').addEventListener('change',()=>actualizarMeses(false));$('filtroMes').addEventListener('change',()=>actualizarQuincenas(false));$('filtroQuincena').addEventListener('change',aplicarFiltros);$('paginaAnterior').addEventListener('click',()=>{if(pagina>1){pagina--;renderFletes();}});$('paginaSiguiente').addEventListener('click',()=>{if(pagina*FILAS_POR_PAGINA<fletesFiltrados.length){pagina++;renderFletes();}});$('exportarExcel').addEventListener('click',exportarXlsx);iniciar();
+  </script>
+</body>
+</html>
