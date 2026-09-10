@@ -63,6 +63,14 @@
   <script>
     const API_URL='https://dl.dropbox.com/scl/fi/p7nm1n8fhpwywmpsezgcm/LiquidacionFletes.json?rlkey=1ahcdu32o7s10icry9hllu81f&dl=1';
     const FILAS_POR_PAGINA=100;
+    const COLUMNAS_PRIORITARIAS=[
+      'anio_liquidacion','mes_liquidacion','mes_nombre','quincena','fecha_rto',
+      'tipo_remito','remito','nombre_empresa','origen','nombre_prod','remito_origen',
+      'nombre_fletero','matricula','fardos','bruto','tara','neto','importe_tarifa',
+      'fecha_vigencia','fecha_fin_tarifa','bruto_categoria_matricula','cat_matr_1',
+      'cat_matr_2','acoplado','cod_prod','deposito','pila_origen','bruto_mtop',
+      'neto_flete','importe_flete','paga_flete'
+    ];
     let datos={control:[],diferencias:[],fletes:[],periodos:[]};
     let fletesFiltrados=[];
     let pagina=1;
@@ -75,6 +83,13 @@
     const seguro=v=>texto(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
     const seleccion=()=>({anio:Number($('filtroAnio').value),mes:Number($('filtroMes').value),quincena:Number($('filtroQuincena').value)});
     const coincidePeriodo=(r,s)=>Number(r.anio_liquidacion)===s.anio&&Number(r.mes_liquidacion)===s.mes&&Number(r.quincena)===s.quincena;
+    const obtenerColumnas=()=>{
+      if(!datos.fletes.length)return COLUMNAS_PRIORITARIAS;
+      const disponibles=[...new Set(datos.fletes.flatMap(registro=>Object.keys(registro)))];
+      const principales=COLUMNAS_PRIORITARIAS.filter(columna=>disponibles.includes(columna));
+      const adicionales=disponibles.filter(columna=>!COLUMNAS_PRIORITARIAS.includes(columna));
+      return [...principales,...adicionales];
+    };
 
     function cargarCombos(){
       const periodos=[...datos.periodos].sort((a,b)=>Number(b.anio_liquidacion)-Number(a.anio_liquidacion)||Number(b.mes_liquidacion)-Number(a.mes_liquidacion)||Number(b.quincena)-Number(a.quincena));
@@ -115,7 +130,7 @@
     }
     function renderFletes(){
       const totalPaginas=Math.max(1,Math.ceil(fletesFiltrados.length/FILAS_POR_PAGINA));pagina=Math.min(pagina,totalPaginas);const inicio=(pagina-1)*FILAS_POR_PAGINA;const visibles=fletesFiltrados.slice(inicio,inicio+FILAS_POR_PAGINA);
-      const columnas=datos.fletes.length?Object.keys(datos.fletes[0]):[];
+      const columnas=obtenerColumnas();
       $('encabezadosFletes').innerHTML=columnas.map(columna=>`<th>${seguro(columna.replaceAll('_',' ').toUpperCase())}</th>`).join('');
       const mostrarValor=(valor,columna)=>{if(valor===null||valor===undefined||valor==='')return '—';if(columna.includes('fecha'))return fecha(valor);if(typeof valor==='number')return valor.toLocaleString('es-UY',{maximumFractionDigits:3});return texto(valor);};
       $('tablaFletes').innerHTML=visibles.map(r=>`<tr>${columnas.map(columna=>`<td>${seguro(mostrarValor(r[columna],columna))}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${Math.max(1,columnas.length)}" class="centro">Sin fletes para el período.</td></tr>`;
@@ -123,9 +138,11 @@
     }
     function exportarXlsx(){
       if(!window.XLSX){alert('No fue posible cargar el exportador de Excel.');return;}const s=seleccion();
-      const filas=fletesFiltrados.map(registro=>({...registro}));
-      const hoja=XLSX.utils.json_to_sheet(filas);
-      const columnas=filas.length?Object.keys(filas[0]):[];
+      const columnas=obtenerColumnas();
+      const filas=fletesFiltrados.map(registro=>Object.fromEntries(columnas.map(columna=>[columna,registro[columna]??''])));
+      const encabezados=columnas.map(columna=>columna.replaceAll('_',' ').toUpperCase());
+      const matriz=[encabezados,...filas.map(fila=>columnas.map(columna=>fila[columna]))];
+      const hoja=XLSX.utils.aoa_to_sheet(matriz);
       hoja['!cols']=columnas.map(columna=>({wch:Math.min(45,Math.max(columna.length+2,...filas.slice(0,500).map(fila=>String(fila[columna]??'').length+2)))}));
       const libro=XLSX.utils.book_new();XLSX.utils.book_append_sheet(libro,hoja,'Fletes');XLSX.writeFile(libro,`Fletes_${s.anio}_${String(s.mes).padStart(2,'0')}_Q${s.quincena}.xlsx`);
     }
