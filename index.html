@@ -8,17 +8,18 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
   <style>
     :root{--verde:#123c2b;--verde2:#1f6848;--verde-suave:#e7f3eb;--fondo:#f3f6f4;--blanco:#fff;--texto:#17231c;--muted:#68756e;--borde:#d8e2dc;--rojo:#b42318;--rojo-suave:#fff0ee;--amarillo:#9a6700;--sombra:0 8px 24px rgba(18,60,43,.08)}
-    *{box-sizing:border-box}body{margin:0;background:var(--fondo);color:var(--texto);font-family:Arial,Helvetica,sans-serif;font-size:15px}button,select{font:inherit}
+    *{box-sizing:border-box}body{margin:0;background:var(--fondo);color:var(--texto);font-family:Arial,Helvetica,sans-serif;font-size:13px}button,select{font:inherit}
     header{background:var(--verde);color:#fff;border-bottom:5px solid #62aa79;padding:18px 24px}.cabecera{max-width:1800px;margin:auto;display:flex;justify-content:space-between;align-items:end;gap:18px}.cabecera h1{font-size:25px;margin:0 0 4px}.cabecera p{margin:0;color:#b9d9c4}.actualizado{white-space:nowrap;color:#d5e9dc;font-size:13px}
     main{max-width:1800px;margin:0 auto;padding:20px 24px 40px}.filtros{display:grid;grid-template-columns:repeat(3,minmax(160px,240px));gap:12px;margin-bottom:20px}.campo{display:grid;gap:6px}.campo label{font-weight:700;font-size:13px;color:var(--muted)}select{width:100%;min-height:42px;padding:8px 34px 8px 11px;border:1px solid var(--borde);border-radius:8px;background:var(--blanco);color:var(--texto)}
     .seccion{margin-top:24px}.titulo-fila{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}.titulo-fila h2{font-size:19px;margin:0}.estado{font-weight:800;font-size:14px}.estado.ok{color:var(--verde2)}.estado.error{color:var(--rojo)}
     .tarjetas{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin-bottom:18px}.tarjeta{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:15px;box-shadow:var(--sombra);text-align:center}.tarjeta .rotulo{color:var(--muted);font-size:13px;margin-bottom:7px}.tarjeta .valor{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
-    .tabla-wrap{overflow:auto;background:var(--blanco);border:1px solid var(--borde);border-radius:10px;box-shadow:var(--sombra)}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:10px 11px;border-bottom:1px solid var(--borde);text-align:center;vertical-align:middle}th{position:sticky;top:0;background:#edf3ef;color:#34453b;font-size:12px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}tbody tr:hover{background:#f7faf8}td.numero,th.numero{text-align:center;font-variant-numeric:tabular-nums}td.centro,th.centro{text-align:center}.etiqueta{font-size:12px;font-weight:800;white-space:nowrap}.etiqueta.ok{color:var(--verde2)}.etiqueta.error{color:var(--rojo)}
+    .tabla-wrap{overflow:auto;background:var(--blanco);border:1px solid var(--borde);border-radius:10px;box-shadow:var(--sombra)}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:10px 11px;border-bottom:1px solid var(--borde);text-align:center;vertical-align:middle}th{position:sticky;top:0;background:#edf3ef;color:#34453b;font-size:11px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}tbody tr:hover{background:#f7faf8}td.numero,th.numero{text-align:center;font-variant-numeric:tabular-nums}td.centro,th.centro{text-align:center}.etiqueta{font-size:11px;font-weight:800;white-space:nowrap}.etiqueta.ok{color:var(--verde2)}.etiqueta.error{color:var(--rojo)}
+    .scroll-superior{height:18px;margin-bottom:5px;overflow-x:auto;overflow-y:hidden;border:1px solid var(--borde);border-radius:7px;background:var(--blanco)}.scroll-superior-contenido{height:1px}.tabla-fletes{font-size:12px}.tabla-fletes th{font-size:11px}.tabla-fletes tbody tr{height:52px}.tabla-fletes th.col-origen,.tabla-fletes td.col-origen{width:240px;min-width:240px;max-width:240px;white-space:normal;line-height:1.3;overflow-wrap:normal;word-break:normal}
     .aviso{padding:18px;border-radius:10px;text-align:center;font-weight:700}.aviso.ok{background:var(--verde-suave);color:var(--verde2)}.aviso.error{background:var(--rojo-suave);color:var(--rojo)}
     .boton{border:0;border-radius:8px;min-height:40px;padding:9px 14px;background:var(--verde);color:#fff;font-weight:700;cursor:pointer}.boton:hover{background:var(--verde2)}.boton:disabled{opacity:.55;cursor:not-allowed}.pie-tabla{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:9px;color:var(--muted);font-size:13px}.paginacion{display:flex;align-items:center;gap:8px}.paginacion button{border:1px solid var(--borde);border-radius:7px;background:var(--blanco);color:var(--texto);padding:6px 10px;cursor:pointer}.paginacion button:disabled{opacity:.45;cursor:not-allowed}
     .cargando,.error-carga{max-width:700px;margin:60px auto;padding:22px;text-align:center;border-radius:10px;background:var(--blanco);border:1px solid var(--borde)}.error-carga{color:var(--rojo)}[hidden]{display:none!important}
     @media(max-width:900px){.tarjetas{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:620px){body{font-size:14px}header{padding:15px}.cabecera{align-items:flex-start;flex-direction:column}.actualizado{white-space:normal}main{padding:15px 12px 30px}.filtros{grid-template-columns:1fr 1fr}.campo:last-child{grid-column:1/-1}.tarjetas{grid-template-columns:1fr 1fr;gap:8px}.tarjeta{padding:12px 8px}.tarjeta .valor{font-size:20px}.titulo-fila{align-items:flex-start;flex-direction:column}.pie-tabla{align-items:flex-start;flex-direction:column}}
+    @media(max-width:620px){body{font-size:12px}header{padding:15px}.cabecera{align-items:flex-start;flex-direction:column}.actualizado{white-space:normal}main{padding:15px 12px 30px}.filtros{grid-template-columns:1fr 1fr}.campo:last-child{grid-column:1/-1}.tarjetas{grid-template-columns:1fr 1fr;gap:8px}.tarjeta{padding:12px 8px}.tarjeta .valor{font-size:20px}.titulo-fila{align-items:flex-start;flex-direction:column}.pie-tabla{align-items:flex-start;flex-direction:column}}
   </style>
 </head>
 <body>
@@ -54,7 +55,8 @@
 
       <section class="seccion">
         <div class="titulo-fila"><h2>Detalle de fletes</h2><button type="button" id="exportarExcel" class="boton">Exportar XLSX</button></div>
-        <div class="tabla-wrap"><table><thead><tr id="encabezadosFletes"></tr></thead><tbody id="tablaFletes"></tbody></table></div>
+        <div id="scrollFletesSuperior" class="scroll-superior"><div id="scrollFletesContenido" class="scroll-superior-contenido"></div></div>
+        <div id="tablaFletesWrap" class="tabla-wrap"><table id="tablaFletesCompleta" class="tabla-fletes"><thead><tr id="encabezadosFletes"></tr></thead><tbody id="tablaFletes"></tbody></table></div>
         <div class="pie-tabla"><span id="cantidadFletes"></span><div class="paginacion"><button type="button" id="paginaAnterior">Anterior</button><span id="paginaActual"></span><button type="button" id="paginaSiguiente">Siguiente</button></div></div>
       </section>
     </div>
@@ -90,6 +92,12 @@
       const adicionales=disponibles.filter(columna=>!COLUMNAS_PRIORITARIAS.includes(columna));
       return [...principales,...adicionales];
     };
+    const claseColumna=columna=>columna==='origen'?' class="col-origen"':'';
+    function sincronizarBarrasFletes(){
+      const superior=$('scrollFletesSuperior'),contenido=$('scrollFletesContenido'),inferior=$('tablaFletesWrap'),tabla=$('tablaFletesCompleta');
+      contenido.style.width=`${tabla.scrollWidth}px`;
+      superior.scrollLeft=inferior.scrollLeft;
+    }
 
     function cargarCombos(){
       const periodos=[...datos.periodos].sort((a,b)=>Number(b.anio_liquidacion)-Number(a.anio_liquidacion)||Number(b.mes_liquidacion)-Number(a.mes_liquidacion)||Number(b.quincena)-Number(a.quincena));
@@ -131,10 +139,11 @@
     function renderFletes(){
       const totalPaginas=Math.max(1,Math.ceil(fletesFiltrados.length/FILAS_POR_PAGINA));pagina=Math.min(pagina,totalPaginas);const inicio=(pagina-1)*FILAS_POR_PAGINA;const visibles=fletesFiltrados.slice(inicio,inicio+FILAS_POR_PAGINA);
       const columnas=obtenerColumnas();
-      $('encabezadosFletes').innerHTML=columnas.map(columna=>`<th>${seguro(columna.replaceAll('_',' ').toUpperCase())}</th>`).join('');
-      const mostrarValor=(valor,columna)=>{if(valor===null||valor===undefined||valor==='')return '—';if(columna.includes('fecha'))return fecha(valor);if(typeof valor==='number')return valor.toLocaleString('es-UY',{maximumFractionDigits:3});return texto(valor);};
-      $('tablaFletes').innerHTML=visibles.map(r=>`<tr>${columnas.map(columna=>`<td>${seguro(mostrarValor(r[columna],columna))}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${Math.max(1,columnas.length)}" class="centro">Sin fletes para el período.</td></tr>`;
+      $('encabezadosFletes').innerHTML=columnas.map(columna=>`<th${claseColumna(columna)}>${seguro(columna.replaceAll('_',' ').toUpperCase())}</th>`).join('');
+      const mostrarValor=(valor,columna)=>{if(valor===null||valor===undefined||valor==='')return '—';if(columna==='anio_liquidacion'||columna==='remito')return String(valor).replace(/[.\s]/g,'');if(columna.includes('fecha'))return fecha(valor);if(typeof valor==='number')return valor.toLocaleString('es-UY',{maximumFractionDigits:3});return texto(valor);};
+      $('tablaFletes').innerHTML=visibles.map(r=>`<tr>${columnas.map(columna=>`<td${claseColumna(columna)}>${seguro(mostrarValor(r[columna],columna))}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${Math.max(1,columnas.length)}" class="centro">Sin fletes para el período.</td></tr>`;
       $('cantidadFletes').textContent=`${entero(fletesFiltrados.length)} fletes filtrados`;$('paginaActual').textContent=`Página ${pagina} de ${totalPaginas}`;$('paginaAnterior').disabled=pagina<=1;$('paginaSiguiente').disabled=pagina>=totalPaginas;$('exportarExcel').disabled=fletesFiltrados.length===0;
+      requestAnimationFrame(sincronizarBarrasFletes);
     }
     function exportarXlsx(){
       if(!window.XLSX){alert('No fue posible cargar el exportador de Excel.');return;}const s=seleccion();
@@ -149,7 +158,7 @@
     async function iniciar(){
       try{const respuesta=await fetch(API_URL,{cache:'no-store'});if(!respuesta.ok)throw new Error(`Error ${respuesta.status}`);const recibido=await respuesta.json();datos={control:Array.isArray(recibido.control)?recibido.control:[],diferencias:Array.isArray(recibido.diferencias)?recibido.diferencias:[],fletes:Array.isArray(recibido.fletes)?recibido.fletes:[],periodos:Array.isArray(recibido.periodos)?recibido.periodos:[]};if(!datos.periodos.length)throw new Error('El JSON no contiene períodos.');$('actualizado').textContent=`Actualizado: ${texto(recibido.fecha_actualizacion)}`;cargarCombos();$('cargando').hidden=true;$('contenido').hidden=false;
       }catch(error){$('cargando').hidden=true;$('errorCarga').hidden=false;$('errorCarga').textContent=`No fue posible cargar los datos. ${error.message}`;}}
-    $('filtroAnio').addEventListener('change',()=>actualizarMeses(false));$('filtroMes').addEventListener('change',()=>actualizarQuincenas(false));$('filtroQuincena').addEventListener('change',aplicarFiltros);$('paginaAnterior').addEventListener('click',()=>{if(pagina>1){pagina--;renderFletes();}});$('paginaSiguiente').addEventListener('click',()=>{if(pagina*FILAS_POR_PAGINA<fletesFiltrados.length){pagina++;renderFletes();}});$('exportarExcel').addEventListener('click',exportarXlsx);iniciar();
+    $('filtroAnio').addEventListener('change',()=>actualizarMeses(false));$('filtroMes').addEventListener('change',()=>actualizarQuincenas(false));$('filtroQuincena').addEventListener('change',aplicarFiltros);$('paginaAnterior').addEventListener('click',()=>{if(pagina>1){pagina--;renderFletes();}});$('paginaSiguiente').addEventListener('click',()=>{if(pagina*FILAS_POR_PAGINA<fletesFiltrados.length){pagina++;renderFletes();}});$('exportarExcel').addEventListener('click',exportarXlsx);$('scrollFletesSuperior').addEventListener('scroll',()=>{$('tablaFletesWrap').scrollLeft=$('scrollFletesSuperior').scrollLeft;});$('tablaFletesWrap').addEventListener('scroll',()=>{$('scrollFletesSuperior').scrollLeft=$('tablaFletesWrap').scrollLeft;});window.addEventListener('resize',sincronizarBarrasFletes);iniciar();
   </script>
 </body>
 </html>
