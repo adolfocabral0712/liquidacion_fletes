@@ -16,6 +16,7 @@
     .tabla-wrap{overflow:auto;background:var(--blanco);border:1px solid var(--borde);border-radius:10px;box-shadow:var(--sombra)}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:10px 11px;border-bottom:1px solid var(--borde);text-align:center;vertical-align:middle}th{position:sticky;top:0;background:#edf3ef;color:#34453b;font-size:11px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}tbody tr:hover{background:#f7faf8}td.numero,th.numero{text-align:center;font-variant-numeric:tabular-nums}td.centro,th.centro{text-align:center}.etiqueta{font-size:11px;font-weight:800;white-space:nowrap}.etiqueta.ok{color:var(--verde2)}.etiqueta.error{color:var(--rojo)}
     .scroll-superior{height:18px;margin-bottom:5px;overflow-x:auto;overflow-y:hidden;border:1px solid var(--borde);border-radius:7px;background:var(--blanco)}.scroll-superior-contenido{height:1px}.tabla-fletes{font-size:12px}.tabla-fletes th{font-size:11px;padding:6px 8px;line-height:1.1}.tabla-fletes td{padding:4px 8px;line-height:1.1}.tabla-fletes tbody tr{height:28px}.tabla-fletes th.col-texto-largo,.tabla-fletes td.col-texto-largo{width:1%;min-width:max-content;max-width:none;white-space:nowrap}.tabla-fletes th.col-deposito,.tabla-fletes td.col-deposito{width:110px;min-width:110px;white-space:nowrap}
     .aviso{padding:18px;border-radius:10px;text-align:center;font-weight:700}.aviso.ok{background:var(--verde-suave);color:var(--verde2)}.aviso.error{background:var(--rojo-suave);color:var(--rojo)}
+    .resumen-desplegable{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;box-shadow:var(--sombra);overflow:hidden}.resumen-desplegable summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:15px 18px;background:var(--verde);color:#fff;cursor:pointer;user-select:none}.resumen-desplegable summary::-webkit-details-marker{display:none}.acumulado-info{display:flex;align-items:baseline;gap:15px;flex-wrap:wrap}.acumulado-info .rotulo{font-size:12px;font-weight:700;text-transform:uppercase;color:#cde4d5}.acumulado-info .valor{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums}.accion-desplegar{font-size:12px;font-weight:700;white-space:nowrap}.accion-desplegar::after{content:'Ver detalle  ▼'}.resumen-desplegable[open] .accion-desplegar::after{content:'Ocultar detalle  ▲'}.resumen-cabecera{padding:11px 15px;background:#edf3ef;border-bottom:1px solid var(--borde)}.resumen-cabecera h3{margin:0;font-size:14px}.resumen-scroll{max-height:420px;overflow:auto}.tabla-resumen{min-width:720px}.tabla-resumen th,.tabla-resumen td{padding:7px 10px}.tabla-resumen td:first-child,.tabla-resumen td:nth-child(2){text-align:left;white-space:nowrap}.tabla-resumen tfoot td{position:sticky;bottom:0;background:#e7f3eb;font-weight:800;border-top:2px solid #b9d9c4}
     .boton{border:0;border-radius:8px;min-height:40px;padding:9px 14px;background:var(--verde);color:#fff;font-weight:700;cursor:pointer}.boton:hover{background:var(--verde2)}.boton:disabled{opacity:.55;cursor:not-allowed}.pie-tabla{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:9px;color:var(--muted);font-size:13px}.paginacion{display:flex;align-items:center;gap:8px}.paginacion button{border:1px solid var(--borde);border-radius:7px;background:var(--blanco);color:var(--texto);padding:6px 10px;cursor:pointer}.paginacion button:disabled{opacity:.45;cursor:not-allowed}
     .cargando,.error-carga{max-width:700px;margin:60px auto;padding:22px;text-align:center;border-radius:10px;background:var(--blanco);border:1px solid var(--borde)}.error-carga{color:var(--rojo)}[hidden]{display:none!important}
     @media(max-width:900px){.tarjetas{grid-template-columns:repeat(2,1fr)}}
@@ -51,6 +52,17 @@
         <div class="titulo-fila"><h2>Registros a verificar</h2><div id="cantidadDiferencias"></div></div>
         <div id="sinDiferencias" class="aviso ok">No existen diferencias para el período seleccionado.</div>
         <div id="conDiferencias" class="tabla-wrap" hidden><table><thead><tr><th>Estado</th><th>Fecha</th><th>Remito</th><th>Origen</th><th>Remito origen</th><th>Matrícula</th><th class="numero">Ton. remitos2</th><th class="numero">Ton. liquidación</th><th class="numero">Diferencia</th></tr></thead><tbody id="tablaDiferencias"></tbody></table></div>
+      </section>
+
+      <section class="seccion">
+        <div class="titulo-fila"><h2>Importe por fletero y origen</h2></div>
+        <details class="resumen-desplegable">
+          <summary><div class="acumulado-info"><span class="rotulo">Importe flete acumulado</span><strong class="valor" id="importeAcumuladoFiltros">0,00</strong></div><span class="accion-desplegar" aria-hidden="true"></span></summary>
+          <div>
+            <div class="resumen-cabecera"><h3>Resumen del período seleccionado</h3></div>
+            <div class="resumen-scroll"><table class="tabla-resumen"><thead><tr><th>Nombre fletero</th><th>Origen</th><th class="numero">Suma importe flete</th></tr></thead><tbody id="tablaResumenFleteros"></tbody><tfoot id="pieResumenFleteros"></tfoot></table></div>
+          </div>
+        </details>
       </section>
 
       <section class="seccion">
@@ -128,7 +140,7 @@
       const controlesEnCero=control.filter(r=>numero(r.toneladas_remitos2)<=0||numero(r.toneladas_liquidacion)<=0).map(r=>({...r,estado:numero(r.toneladas_remitos2)<=0&&numero(r.toneladas_liquidacion)<=0?'TONELADAS EN CERO':numero(r.toneladas_remitos2)<=0?'TONELADAS REMITOS2 EN CERO':'TONELADAS LIQUIDACIÓN EN CERO',fecha_rto:null,remito:'—',remito_origen:'—',matricula:'—'}));
       const diferenciasVisibles=[...diferencias,...controlesEnCero.filter(c=>!diferencias.some(d=>String(d.origen)===String(c.origen)&&String(d.estado).includes('CERO')))];
       fletesFiltrados=datos.fletes.filter(r=>coincidePeriodo(r,s));
-      renderControl(control,diferenciasVisibles);renderDiferencias(diferenciasVisibles);renderFletes();
+      renderControl(control,diferenciasVisibles);renderDiferencias(diferenciasVisibles);renderResumenFleteros();renderFletes();
     }
     function renderControl(control,diferencias){
       const vr=control.reduce((a,r)=>a+numero(r.viajes_remitos2),0),vl=control.reduce((a,r)=>a+numero(r.viajes_liquidacion),0),td=control.reduce((a,r)=>a+numero(r.diferencia_toneladas),0);
@@ -139,6 +151,19 @@
     function renderDiferencias(lista){
       $('cantidadDiferencias').textContent=`${entero(lista.length)} registros`;$('sinDiferencias').hidden=lista.length>0;$('conDiferencias').hidden=lista.length===0;
       $('tablaDiferencias').innerHTML=lista.map(r=>`<tr><td><span class="etiqueta error">${seguro(r.estado)}</span></td><td>${fecha(r.fecha_rto)}</td><td>${seguro(r.remito)}</td><td>${seguro(r.origen)}</td><td>${seguro(r.remito_origen)}</td><td>${seguro(r.matricula)}</td><td class="numero">${decimal(r.toneladas_remitos2)}</td><td class="numero">${decimal(r.toneladas_liquidacion)}</td><td class="numero">${decimal(r.diferencia_toneladas)}</td></tr>`).join('');
+    }
+    function renderResumenFleteros(){
+      const grupos=new Map();
+      for(const registro of fletesFiltrados){
+        const fletero=texto(registro.nombre_fletero),origen=texto(registro.origen),clave=`${fletero}\u0000${origen}`;
+        const actual=grupos.get(clave)||{fletero,origen,importe:0};
+        actual.importe+=numero(registro.importe_flete);grupos.set(clave,actual);
+      }
+      const filas=[...grupos.values()].sort((a,b)=>a.fletero.localeCompare(b.fletero,'es',{sensitivity:'base'})||a.origen.localeCompare(b.origen,'es',{sensitivity:'base'}));
+      const total=filas.reduce((suma,fila)=>suma+fila.importe,0);
+      $('importeAcumuladoFiltros').textContent=decimal(total);
+      $('tablaResumenFleteros').innerHTML=filas.map(fila=>`<tr><td>${seguro(fila.fletero)}</td><td>${seguro(fila.origen)}</td><td class="numero">${decimal(fila.importe)}</td></tr>`).join('')||'<tr><td colspan="3" class="centro">Sin importes para el período.</td></tr>';
+      $('pieResumenFleteros').innerHTML=filas.length?`<tr><td colspan="2">TOTAL</td><td class="numero">${decimal(total)}</td></tr>`:'';
     }
     function renderFletes(){
       const totalPaginas=Math.max(1,Math.ceil(fletesFiltrados.length/FILAS_POR_PAGINA));pagina=Math.min(pagina,totalPaginas);const inicio=(pagina-1)*FILAS_POR_PAGINA;const visibles=fletesFiltrados.slice(inicio,inicio+FILAS_POR_PAGINA);
