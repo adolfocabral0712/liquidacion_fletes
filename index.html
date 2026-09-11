@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#123c2b">
   <title>Liquidación de fletes</title>
-  <!-- Versión acordeones y exportación Excel formateada: 11/09/2026 -->
+  <!-- Versión exclusiva TIPO REMITO ENTRADA: 11/09/2026 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
   <style>
     :root{--verde:#123c2b;--verde2:#1f6848;--verde-suave:#e7f3eb;--fondo:#f3f6f4;--blanco:#fff;--texto:#17231c;--muted:#68756e;--borde:#d8e2dc;--rojo:#b42318;--rojo-suave:#fff0ee;--amarillo:#9a6700;--sombra:0 8px 24px rgba(18,60,43,.08)}
@@ -107,6 +107,7 @@
     const fecha=v=>{if(!v)return '—';const p=String(v).slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:v};
     const texto=v=>v===null||v===undefined||v===''?'—':String(v);
     const seguro=v=>texto(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    const esRemitoEntrada=registro=>String(registro?.tipo_remito??'').trim().toUpperCase()==='ENTRADA';
     const seleccion=()=>({anio:Number($('filtroAnio').value),mes:Number($('filtroMes').value),quincena:Number($('filtroQuincena').value)});
     const coincidePeriodo=(r,s)=>Number(r.anio_liquidacion)===s.anio&&Number(r.mes_liquidacion)===s.mes&&Number(r.quincena)===s.quincena;
     const obtenerColumnas=()=>{
@@ -237,7 +238,7 @@
       const libro=XLSX.utils.book_new();XLSX.utils.book_append_sheet(libro,hoja,'Fletes');XLSX.writeFile(libro,`Fletes_${s.anio}_${String(s.mes).padStart(2,'0')}_Q${s.quincena}.xlsx`);
     }
     async function iniciar(){
-      try{const respuesta=await fetch(API_URL,{cache:'no-store'});if(!respuesta.ok)throw new Error(`Error ${respuesta.status}`);const recibido=await respuesta.json();datos={control:Array.isArray(recibido.control)?recibido.control:[],diferencias:Array.isArray(recibido.diferencias)?recibido.diferencias:[],fletes:Array.isArray(recibido.fletes)?recibido.fletes:[],periodos:Array.isArray(recibido.periodos)?recibido.periodos:[]};if(!datos.periodos.length)throw new Error('El JSON no contiene períodos.');$('actualizado').textContent=`Actualizado: ${texto(recibido.fecha_actualizacion)}`;cargarCombos();$('cargando').hidden=true;$('contenido').hidden=false;
+      try{const respuesta=await fetch(API_URL,{cache:'no-store'});if(!respuesta.ok)throw new Error(`Error ${respuesta.status}`);const recibido=await respuesta.json();const fletesEntrada=(Array.isArray(recibido.fletes)?recibido.fletes:[]).filter(esRemitoEntrada);datos={control:Array.isArray(recibido.control)?recibido.control:[],diferencias:Array.isArray(recibido.diferencias)?recibido.diferencias:[],fletes:fletesEntrada,periodos:Array.isArray(recibido.periodos)?recibido.periodos:[]};if(!datos.periodos.length)throw new Error('El JSON no contiene períodos.');$('actualizado').textContent=`Actualizado: ${texto(recibido.fecha_actualizacion)}`;cargarCombos();$('cargando').hidden=true;$('contenido').hidden=false;
       }catch(error){$('cargando').hidden=true;$('errorCarga').hidden=false;$('errorCarga').textContent=`No fue posible cargar los datos. ${error.message}`;}}
     $('filtroAnio').addEventListener('change',()=>actualizarMeses(false));$('filtroMes').addEventListener('change',()=>actualizarQuincenas(false));$('filtroQuincena').addEventListener('change',aplicarFiltros);$('paginaAnterior').addEventListener('click',()=>{if(pagina>1){pagina--;renderFletes();}});$('paginaSiguiente').addEventListener('click',()=>{if(pagina*FILAS_POR_PAGINA<fletesFiltrados.length){pagina++;renderFletes();}});$('exportarExcel').addEventListener('click',exportarXlsx);$('scrollFletesSuperior').addEventListener('scroll',()=>{$('tablaFletesWrap').scrollLeft=$('scrollFletesSuperior').scrollLeft;});$('tablaFletesWrap').addEventListener('scroll',()=>{$('scrollFletesSuperior').scrollLeft=$('tablaFletesWrap').scrollLeft;});window.addEventListener('resize',sincronizarBarrasFletes);iniciar();
   </script>
