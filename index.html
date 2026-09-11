@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#123c2b">
   <title>Liquidación de fletes</title>
-  <!-- Versión exclusiva TIPO REMITO ENTRADA: 11/09/2026 -->
+  <!-- Versión ENTRADA con columnas AÑO y MES ajustadas: 11/09/2026 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
   <style>
     :root{--verde:#123c2b;--verde2:#1f6848;--verde-suave:#e7f3eb;--fondo:#f3f6f4;--blanco:#fff;--texto:#17231c;--muted:#68756e;--borde:#d8e2dc;--rojo:#b42318;--rojo-suave:#fff0ee;--amarillo:#9a6700;--sombra:0 8px 24px rgba(18,60,43,.08)}
@@ -90,13 +90,15 @@
     const API_URL='https://dl.dropbox.com/scl/fi/p7nm1n8fhpwywmpsezgcm/LiquidacionFletes.json?rlkey=1ahcdu32o7s10icry9hllu81f&dl=1';
     const FILAS_POR_PAGINA=100;
     const COLUMNAS_PRIORITARIAS=[
-      'anio_liquidacion','mes_liquidacion','mes_nombre','quincena','fecha_rto',
+      'anio_liquidacion','mes_nombre','quincena','fecha_rto',
       'tipo_remito','remito','nombre_empresa','origen','nombre_prod','remito_origen',
       'nombre_fletero','matricula','fardos','bruto','tara','neto','importe_tarifa',
       'fecha_vigencia','fecha_fin_tarifa','bruto_categoria_matricula','cat_matr_1',
       'cat_matr_2','acoplado','cod_prod','deposito','pila_origen','bruto_mtop',
       'neto_flete','importe_flete','paga_flete'
     ];
+    const COLUMNAS_OCULTAS=['mes_liquidacion'];
+    const ETIQUETAS_COLUMNAS={anio_liquidacion:'AÑO',mes_nombre:'MES'};
     let datos={control:[],diferencias:[],fletes:[],periodos:[]};
     let fletesFiltrados=[];
     let pagina=1;
@@ -112,11 +114,12 @@
     const coincidePeriodo=(r,s)=>Number(r.anio_liquidacion)===s.anio&&Number(r.mes_liquidacion)===s.mes&&Number(r.quincena)===s.quincena;
     const obtenerColumnas=()=>{
       if(!datos.fletes.length)return COLUMNAS_PRIORITARIAS;
-      const disponibles=[...new Set(datos.fletes.flatMap(registro=>Object.keys(registro)))];
+      const disponibles=[...new Set(datos.fletes.flatMap(registro=>Object.keys(registro)))].filter(columna=>!COLUMNAS_OCULTAS.includes(columna));
       const principales=COLUMNAS_PRIORITARIAS.filter(columna=>disponibles.includes(columna));
       const adicionales=disponibles.filter(columna=>!COLUMNAS_PRIORITARIAS.includes(columna));
       return [...principales,...adicionales];
     };
+    const etiquetaColumna=columna=>ETIQUETAS_COLUMNAS[columna]||columna.replaceAll('_',' ').toUpperCase();
     const claseColumna=columna=>{
       if(['nombre_empresa','origen','nombre_fletero'].includes(columna))return ' class="col-texto-largo"';
       if(columna==='deposito')return ' class="col-deposito"';
@@ -194,7 +197,7 @@
     function renderFletes(){
       const totalPaginas=Math.max(1,Math.ceil(fletesFiltrados.length/FILAS_POR_PAGINA));pagina=Math.min(pagina,totalPaginas);const inicio=(pagina-1)*FILAS_POR_PAGINA;const visibles=fletesFiltrados.slice(inicio,inicio+FILAS_POR_PAGINA);
       const columnas=obtenerColumnas();
-      $('encabezadosFletes').innerHTML=columnas.map(columna=>`<th${claseColumna(columna)}>${seguro(columna.replaceAll('_',' ').toUpperCase())}</th>`).join('');
+      $('encabezadosFletes').innerHTML=columnas.map(columna=>`<th${claseColumna(columna)}>${seguro(etiquetaColumna(columna))}</th>`).join('');
       const mostrarValor=(valor,columna)=>{if(valor===null||valor===undefined||valor==='')return '—';if(columna==='anio_liquidacion'||columna==='remito')return String(valor).replace(/[.\s]/g,'');if(columna.includes('fecha'))return fecha(valor);if(typeof valor==='number')return valor.toLocaleString('es-UY',{maximumFractionDigits:3});return texto(valor);};
       $('tablaFletes').innerHTML=visibles.map(r=>`<tr>${columnas.map(columna=>`<td${claseColumna(columna)}>${seguro(mostrarValor(r[columna],columna))}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${Math.max(1,columnas.length)}" class="centro">Sin fletes para el período.</td></tr>`;
       $('cantidadFletes').textContent=`${entero(fletesFiltrados.length)} fletes filtrados`;$('paginaActual').textContent=`Página ${pagina} de ${totalPaginas}`;$('paginaAnterior').disabled=pagina<=1;$('paginaSiguiente').disabled=pagina>=totalPaginas;$('exportarExcel').disabled=fletesFiltrados.length===0;
@@ -223,7 +226,7 @@
         return valor??'';
       };
       const filas=fletesFiltrados.map(registro=>Object.fromEntries(columnas.map(columna=>[columna,valorExcel(registro[columna],columna)])));
-      const encabezados=columnas.map(columna=>columna.replaceAll('_',' ').toUpperCase());
+      const encabezados=columnas.map(etiquetaColumna);
       const matriz=[encabezados,...filas.map(fila=>columnas.map(columna=>fila[columna]))];
       const hoja=XLSX.utils.aoa_to_sheet(matriz,{cellDates:true});
       const aplicarFormato=(columna,formato)=>{
