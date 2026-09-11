@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#123c2b">
   <title>Liquidación de fletes</title>
-  <!-- Versión ENTRADA con columnas AÑO y MES ajustadas: 11/09/2026 -->
+  <!-- Versión REMITO ascendente y DEPOSITO reubicado en XLSX: 11/09/2026 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
   <style>
     :root{--verde:#123c2b;--verde2:#1f6848;--verde-suave:#e7f3eb;--fondo:#f3f6f4;--blanco:#fff;--texto:#17231c;--muted:#68756e;--borde:#d8e2dc;--rojo:#b42318;--rojo-suave:#fff0ee;--amarillo:#9a6700;--sombra:0 8px 24px rgba(18,60,43,.08)}
@@ -119,6 +119,12 @@
       const adicionales=disponibles.filter(columna=>!COLUMNAS_PRIORITARIAS.includes(columna));
       return [...principales,...adicionales];
     };
+    const obtenerColumnasExcel=()=>{
+      const columnas=obtenerColumnas().filter(columna=>columna!=='deposito');
+      const posicionEmpresa=columnas.indexOf('nombre_empresa');
+      if(datos.fletes.some(registro=>Object.prototype.hasOwnProperty.call(registro,'deposito')))columnas.splice(posicionEmpresa>=0?posicionEmpresa+1:columnas.length,0,'deposito');
+      return columnas;
+    };
     const etiquetaColumna=columna=>ETIQUETAS_COLUMNAS[columna]||columna.replaceAll('_',' ').toUpperCase();
     const claseColumna=columna=>{
       if(['nombre_empresa','origen','nombre_fletero'].includes(columna))return ' class="col-texto-largo"';
@@ -195,7 +201,8 @@
       $('listaResumenMontes').innerHTML=filas.map(([monte,importe])=>`<div class="monte-fila"><span class="monte-nombre">${seguro(monte)}</span><span class="monte-importe">${decimal(importe)}</span></div>`).join('')||'<div class="aviso ok">Sin importes para el período.</div>';
     }
     function renderFletes(){
-      const totalPaginas=Math.max(1,Math.ceil(fletesFiltrados.length/FILAS_POR_PAGINA));pagina=Math.min(pagina,totalPaginas);const inicio=(pagina-1)*FILAS_POR_PAGINA;const visibles=fletesFiltrados.slice(inicio,inicio+FILAS_POR_PAGINA);
+      const ordenados=[...fletesFiltrados].sort((a,b)=>Number(String(a.remito??'').replace(/\D/g,''))-Number(String(b.remito??'').replace(/\D/g,'')));
+      const totalPaginas=Math.max(1,Math.ceil(ordenados.length/FILAS_POR_PAGINA));pagina=Math.min(pagina,totalPaginas);const inicio=(pagina-1)*FILAS_POR_PAGINA;const visibles=ordenados.slice(inicio,inicio+FILAS_POR_PAGINA);
       const columnas=obtenerColumnas();
       $('encabezadosFletes').innerHTML=columnas.map(columna=>`<th${claseColumna(columna)}>${seguro(etiquetaColumna(columna))}</th>`).join('');
       const mostrarValor=(valor,columna)=>{if(valor===null||valor===undefined||valor==='')return '—';if(columna==='anio_liquidacion'||columna==='remito')return String(valor).replace(/[.\s]/g,'');if(columna.includes('fecha'))return fecha(valor);if(typeof valor==='number')return valor.toLocaleString('es-UY',{maximumFractionDigits:3});return texto(valor);};
@@ -205,7 +212,7 @@
     }
     function exportarXlsx(){
       if(!window.XLSX){alert('No fue posible cargar el exportador de Excel.');return;}const s=seleccion();
-      const columnas=obtenerColumnas();
+      const columnas=obtenerColumnasExcel();
       const columnasFecha=['fecha_rto','fecha_vigencia','fecha_fin_tarifa'];
       const columnasMiles=['bruto','tara','neto','importe_tarifa','bruto_categoria_matricula','bruto_mtop','neto_flete'];
       const convertirNumero=valor=>{
