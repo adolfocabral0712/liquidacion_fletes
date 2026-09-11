@@ -2,255 +2,2205 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
   <meta name="theme-color" content="#123c2b">
+
   <title>Liquidación de fletes</title>
-  <!-- Versión REMITO ascendente y DEPOSITO reubicado en XLSX: 11/09/2026 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+    defer
+  ></script>
+
   <style>
-    :root{--verde:#123c2b;--verde2:#1f6848;--verde-suave:#e7f3eb;--fondo:#f3f6f4;--blanco:#fff;--texto:#17231c;--muted:#68756e;--borde:#d8e2dc;--rojo:#b42318;--rojo-suave:#fff0ee;--amarillo:#9a6700;--sombra:0 8px 24px rgba(18,60,43,.08)}
-    *{box-sizing:border-box}body{margin:0;background:var(--fondo);color:var(--texto);font-family:Arial,Helvetica,sans-serif;font-size:13px}button,select{font:inherit}
-    header{background:var(--verde);color:#fff;border-bottom:5px solid #62aa79;padding:18px 24px}.cabecera{max-width:1800px;margin:auto;display:flex;justify-content:space-between;align-items:end;gap:18px}.cabecera h1{font-size:25px;margin:0 0 4px}.cabecera p{margin:0;color:#b9d9c4}.actualizado{white-space:nowrap;color:#d5e9dc;font-size:13px}
-    main{max-width:1800px;margin:0 auto;padding:20px 24px 40px}.filtros{display:grid;grid-template-columns:repeat(3,minmax(160px,240px));gap:12px;margin-bottom:20px}.campo{display:grid;gap:6px}.campo label{font-weight:700;font-size:13px;color:var(--muted)}select{width:100%;min-height:42px;padding:8px 34px 8px 11px;border:1px solid var(--borde);border-radius:8px;background:var(--blanco);color:var(--texto)}
-    .seccion{margin-top:24px}.titulo-fila{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}.titulo-fila h2{font-size:19px;margin:0}.estado{font-weight:800;font-size:14px}.estado.ok{color:var(--verde2)}.estado.error{color:var(--rojo)}
-    .tarjetas{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin-bottom:18px}.tarjeta{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:15px;box-shadow:var(--sombra);text-align:center}.tarjeta .rotulo{color:var(--muted);font-size:13px;margin-bottom:7px}.tarjeta .valor{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
-    .tabla-wrap{overflow:auto;background:var(--blanco);border:1px solid var(--borde);border-radius:10px;box-shadow:var(--sombra)}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:10px 11px;border-bottom:1px solid var(--borde);text-align:center;vertical-align:middle}th{position:sticky;top:0;background:#edf3ef;color:#34453b;font-size:11px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}tbody tr:hover{background:#f7faf8}td.numero,th.numero{text-align:center;font-variant-numeric:tabular-nums}td.centro,th.centro{text-align:center}.etiqueta{font-size:11px;font-weight:800;white-space:nowrap}.etiqueta.ok{color:var(--verde2)}.etiqueta.error{color:var(--rojo)}
-    .scroll-superior{height:18px;margin-bottom:5px;overflow-x:auto;overflow-y:hidden;border:1px solid var(--borde);border-radius:7px;background:var(--blanco)}.scroll-superior-contenido{height:1px}.tabla-fletes{font-size:12px}.tabla-fletes th{font-size:11px;padding:6px 8px;line-height:1.1}.tabla-fletes td{padding:4px 8px;line-height:1.1}.tabla-fletes tbody tr{height:28px}.tabla-fletes th.col-texto-largo,.tabla-fletes td.col-texto-largo{width:1%;min-width:max-content;max-width:none;white-space:nowrap}.tabla-fletes th.col-deposito,.tabla-fletes td.col-deposito{width:110px;min-width:110px;white-space:nowrap}
-    .aviso{padding:18px;border-radius:10px;text-align:center;font-weight:700}.aviso.ok{background:var(--verde-suave);color:var(--verde2)}.aviso.error{background:var(--rojo-suave);color:var(--rojo)}
-    .resumen-desplegable{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;box-shadow:var(--sombra);overflow:hidden}.resumen-desplegable>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:15px 18px;background:var(--verde);color:#fff;cursor:pointer;user-select:none}.resumen-desplegable summary::-webkit-details-marker{display:none}.acumulado-info{display:flex;align-items:baseline;gap:15px;flex-wrap:wrap}.acumulado-info .rotulo{font-size:12px;font-weight:700;text-transform:uppercase;color:#cde4d5}.acumulado-info .valor{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums}.accion-desplegar{font-size:12px;font-weight:700;white-space:nowrap}.accion-desplegar::after{content:'Ver detalle  ▼'}.resumen-desplegable[open]>summary .accion-desplegar::after{content:'Ocultar detalle  ▲'}.resumen-cabecera{padding:11px 15px;background:#edf3ef;border-bottom:1px solid var(--borde)}.resumen-cabecera h3{margin:0;font-size:14px}.resumen-scroll{max-height:440px;overflow:auto;padding:10px 12px}.fletero-grupo{border:1px solid var(--borde);border-radius:8px;margin-bottom:8px;overflow:hidden;background:var(--blanco)}.fletero-grupo:last-child{margin-bottom:0}.fletero-grupo>summary{list-style:none;display:grid;grid-template-columns:minmax(0,1fr) auto 18px;align-items:center;gap:14px;padding:10px 13px;background:#f7faf8;cursor:pointer;font-weight:800}.fletero-grupo>summary:hover{background:#edf3ef}.fletero-importe{color:var(--verde);font-variant-numeric:tabular-nums;white-space:nowrap}.fletero-flecha::after{content:'▼';color:var(--muted);font-size:11px}.fletero-grupo[open] .fletero-flecha::after{content:'▲'}.monte-fila{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px;padding:10px 13px;margin-bottom:8px;border:1px solid var(--borde);border-radius:8px;background:#f7faf8;font-weight:800}.monte-fila:last-child{margin-bottom:0}.monte-nombre{text-align:left}.monte-importe{min-width:140px;text-align:center;color:var(--verde);font-variant-numeric:tabular-nums;white-space:nowrap}.tabla-origenes{min-width:620px;box-shadow:none}.tabla-origenes th,.tabla-origenes td{padding:6px 10px;text-align:center}.tabla-origenes td:first-child{white-space:nowrap}.tabla-origenes th.numero,.tabla-origenes td.numero{text-align:center}
-    .boton{border:0;border-radius:8px;min-height:40px;padding:9px 14px;background:var(--verde);color:#fff;font-weight:700;cursor:pointer}.boton:hover{background:var(--verde2)}.boton:disabled{opacity:.55;cursor:not-allowed}.pie-tabla{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:9px;color:var(--muted);font-size:13px}.paginacion{display:flex;align-items:center;gap:8px}.paginacion button{border:1px solid var(--borde);border-radius:7px;background:var(--blanco);color:var(--texto);padding:6px 10px;cursor:pointer}.paginacion button:disabled{opacity:.45;cursor:not-allowed}
-    .cargando,.error-carga{max-width:700px;margin:60px auto;padding:22px;text-align:center;border-radius:10px;background:var(--blanco);border:1px solid var(--borde)}.error-carga{color:var(--rojo)}[hidden]{display:none!important}
-    @media(max-width:900px){.tarjetas{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:620px){body{font-size:12px}header{padding:15px}.cabecera{align-items:flex-start;flex-direction:column}.actualizado{white-space:normal}main{padding:15px 12px 30px}.filtros{grid-template-columns:1fr 1fr}.campo:last-child{grid-column:1/-1}.tarjetas{grid-template-columns:1fr 1fr;gap:8px}.tarjeta{padding:12px 8px}.tarjeta .valor{font-size:20px}.titulo-fila{align-items:flex-start;flex-direction:column}.pie-tabla{align-items:flex-start;flex-direction:column}}
+    :root {
+      --verde: #123c2b;
+      --verde2: #1f6848;
+      --verde-suave: #e7f3eb;
+      --fondo: #f3f6f4;
+      --blanco: #ffffff;
+      --texto: #17231c;
+      --muted: #68756e;
+      --borde: #d8e2dc;
+      --rojo: #b42318;
+      --rojo-suave: #fff0ee;
+      --sombra: 0 8px 24px rgba(18, 60, 43, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--fondo);
+      color: var(--texto);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13px;
+    }
+
+    button,
+    select {
+      font: inherit;
+    }
+
+    header {
+      padding: 18px 24px;
+      color: #ffffff;
+      background: var(--verde);
+      border-bottom: 5px solid #62aa79;
+    }
+
+    .cabecera {
+      display: flex;
+      gap: 18px;
+      align-items: flex-end;
+      justify-content: space-between;
+      max-width: 1800px;
+      margin: auto;
+    }
+
+    .cabecera h1 {
+      margin: 0 0 4px;
+      font-size: 25px;
+    }
+
+    .cabecera p {
+      margin: 0;
+      color: #b9d9c4;
+    }
+
+    .actualizado {
+      color: #d5e9dc;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    main {
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 20px 24px 40px;
+    }
+
+    .filtros {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(160px, 240px));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .campo {
+      display: grid;
+      gap: 6px;
+    }
+
+    .campo label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    select {
+      width: 100%;
+      min-height: 42px;
+      padding: 8px 34px 8px 11px;
+      color: var(--texto);
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+    }
+
+    .seccion {
+      margin-top: 24px;
+    }
+
+    .titulo-fila {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .titulo-fila h2 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .estado {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .estado.ok {
+      color: var(--verde2);
+    }
+
+    .estado.error {
+      color: var(--rojo);
+    }
+
+    .tarjetas {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .tarjeta {
+      padding: 15px;
+      text-align: center;
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      box-shadow: var(--sombra);
+    }
+
+    .tarjeta .rotulo {
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .tarjeta .valor {
+      font-size: 24px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tabla-wrap {
+      overflow: auto;
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      box-shadow: var(--sombra);
+    }
+
+    table {
+      width: 100%;
+      min-width: 850px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 10px 11px;
+      text-align: center;
+      vertical-align: middle;
+      border-bottom: 1px solid var(--borde);
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      color: #34453b;
+      font-size: 11px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+      background: #edf3ef;
+    }
+
+    tbody tr:hover {
+      background: #f7faf8;
+    }
+
+    td.numero,
+    th.numero {
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    td.centro,
+    th.centro {
+      text-align: center;
+    }
+
+    .etiqueta {
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .etiqueta.ok {
+      color: var(--verde2);
+    }
+
+    .etiqueta.error {
+      color: var(--rojo);
+    }
+
+    .scroll-superior {
+      height: 18px;
+      margin-bottom: 5px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      border-radius: 7px;
+    }
+
+    .scroll-superior-contenido {
+      height: 1px;
+    }
+
+    .tabla-fletes {
+      font-size: 12px;
+    }
+
+    .tabla-fletes th {
+      padding: 6px 8px;
+      font-size: 11px;
+      line-height: 1.1;
+    }
+
+    .tabla-fletes td {
+      padding: 4px 8px;
+      line-height: 1.1;
+    }
+
+    .tabla-fletes tbody tr {
+      height: 28px;
+    }
+
+    .tabla-fletes th.col-texto-largo,
+    .tabla-fletes td.col-texto-largo {
+      width: 1%;
+      min-width: max-content;
+      max-width: none;
+      white-space: nowrap;
+    }
+
+    .tabla-fletes th.col-deposito,
+    .tabla-fletes td.col-deposito {
+      width: 110px;
+      min-width: 110px;
+      white-space: nowrap;
+    }
+
+    .aviso {
+      padding: 18px;
+      font-weight: 700;
+      text-align: center;
+      border-radius: 10px;
+    }
+
+    .aviso.ok {
+      color: var(--verde2);
+      background: var(--verde-suave);
+    }
+
+    .aviso.error {
+      color: var(--rojo);
+      background: var(--rojo-suave);
+    }
+
+    .resumen-desplegable {
+      overflow: hidden;
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      box-shadow: var(--sombra);
+    }
+
+    .resumen-desplegable > summary {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 18px;
+      color: #ffffff;
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+      background: var(--verde);
+    }
+
+    .resumen-desplegable summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .acumulado-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: baseline;
+    }
+
+    .acumulado-info .rotulo {
+      color: #cde4d5;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .acumulado-info .valor {
+      font-size: 28px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .accion-desplegar {
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .accion-desplegar::after {
+      content: "Ver detalle ▼";
+    }
+
+    .resumen-desplegable[open]
+      > summary
+      .accion-desplegar::after {
+      content: "Ocultar detalle ▲";
+    }
+
+    .resumen-cabecera {
+      padding: 11px 15px;
+      background: #edf3ef;
+      border-bottom: 1px solid var(--borde);
+    }
+
+    .resumen-cabecera h3 {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .resumen-scroll {
+      max-height: 440px;
+      padding: 10px 12px;
+      overflow: auto;
+    }
+
+    .fletero-grupo {
+      margin-bottom: 8px;
+      overflow: hidden;
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+    }
+
+    .fletero-grupo:last-child {
+      margin-bottom: 0;
+    }
+
+    .fletero-grupo > summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto 18px;
+      gap: 14px;
+      align-items: center;
+      padding: 10px 13px;
+      font-weight: 800;
+      cursor: pointer;
+      list-style: none;
+      background: #f7faf8;
+    }
+
+    .fletero-grupo > summary:hover {
+      background: #edf3ef;
+    }
+
+    .fletero-importe {
+      color: var(--verde);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .fletero-flecha::after {
+      color: var(--muted);
+      font-size: 11px;
+      content: "▼";
+    }
+
+    .fletero-grupo[open] .fletero-flecha::after {
+      content: "▲";
+    }
+
+    .monte-fila {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 10px 13px;
+      margin-bottom: 8px;
+      font-weight: 800;
+      background: #f7faf8;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+    }
+
+    .monte-fila:last-child {
+      margin-bottom: 0;
+    }
+
+    .monte-nombre {
+      text-align: left;
+    }
+
+    .monte-importe {
+      min-width: 140px;
+      color: var(--verde);
+      text-align: center;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tabla-origenes {
+      min-width: 620px;
+      box-shadow: none;
+    }
+
+    .tabla-origenes th,
+    .tabla-origenes td {
+      padding: 6px 10px;
+      text-align: center;
+    }
+
+    .tabla-origenes td:first-child {
+      white-space: nowrap;
+    }
+
+    .tabla-origenes th.numero,
+    .tabla-origenes td.numero {
+      text-align: center;
+    }
+
+    .boton {
+      min-height: 40px;
+      padding: 9px 14px;
+      color: #ffffff;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--verde);
+      border: 0;
+      border-radius: 8px;
+    }
+
+    .boton:hover {
+      background: var(--verde2);
+    }
+
+    .boton:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .pie-tabla {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .paginacion {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .paginacion button {
+      padding: 6px 10px;
+      color: var(--texto);
+      cursor: pointer;
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      border-radius: 7px;
+    }
+
+    .paginacion button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .cargando,
+    .error-carga {
+      max-width: 700px;
+      padding: 22px;
+      margin: 60px auto;
+      text-align: center;
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+    }
+
+    .error-carga {
+      color: var(--rojo);
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 900px) {
+      .tarjetas {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 620px) {
+      body {
+        font-size: 12px;
+      }
+
+      header {
+        padding: 15px;
+      }
+
+      .cabecera {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .actualizado {
+        white-space: normal;
+      }
+
+      main {
+        padding: 15px 12px 30px;
+      }
+
+      .filtros {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .campo:last-child {
+        grid-column: 1 / -1;
+      }
+
+      .tarjetas {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .tarjeta {
+        padding: 12px 8px;
+      }
+
+      .tarjeta .valor {
+        font-size: 20px;
+      }
+
+      .titulo-fila {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .pie-tabla {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
   </style>
 </head>
+
 <body>
   <header>
-    <div class="cabecera"><div><h1>Liquidación de fletes</h1><p>Control de viajes, toneladas y detalle liquidado</p></div><div class="actualizado" id="actualizado">Actualizando…</div></div>
+    <div class="cabecera">
+      <div>
+        <h1>Liquidación de fletes</h1>
+        <p>Control de viajes, toneladas y detalle liquidado</p>
+      </div>
+
+      <div class="actualizado" id="actualizado">
+        Actualizando…
+      </div>
+    </div>
   </header>
+
   <main>
-    <div id="cargando" class="cargando">Cargando información…</div>
+    <div id="cargando" class="cargando">
+      Cargando información…
+    </div>
+
     <div id="errorCarga" class="error-carga" hidden></div>
+
     <div id="contenido" hidden>
-      <section class="filtros" aria-label="Filtros del período">
-        <div class="campo"><label for="filtroAnio">Año</label><select id="filtroAnio"></select></div>
-        <div class="campo"><label for="filtroMes">Mes</label><select id="filtroMes"></select></div>
-        <div class="campo"><label for="filtroQuincena">Quincena</label><select id="filtroQuincena"></select></div>
+      <section
+        class="filtros"
+        aria-label="Filtros del período"
+      >
+        <div class="campo">
+          <label for="filtroAnio">Año</label>
+          <select id="filtroAnio"></select>
+        </div>
+
+        <div class="campo">
+          <label for="filtroMes">Mes</label>
+          <select id="filtroMes"></select>
+        </div>
+
+        <div class="campo">
+          <label for="filtroQuincena">Quincena</label>
+          <select id="filtroQuincena"></select>
+        </div>
       </section>
 
       <section>
-        <div class="titulo-fila"><h2>Control Ingreso vs. Liquidación</h2><div id="estadoGeneral" class="estado"></div></div>
-        <div class="tarjetas">
-          <article class="tarjeta"><div class="rotulo">Viajes remitos2</div><div class="valor" id="viajesRemitos2">0</div></article>
-          <article class="tarjeta"><div class="rotulo">Viajes liquidados</div><div class="valor" id="viajesLiquidacion">0</div></article>
-          <article class="tarjeta"><div class="rotulo">Diferencia de viajes</div><div class="valor" id="diferenciaViajes">0</div></article>
-          <article class="tarjeta"><div class="rotulo">Diferencia de toneladas</div><div class="valor" id="diferenciaToneladas">0,00</div></article>
+        <div class="titulo-fila">
+          <h2>Control Ingreso vs. Liquidación</h2>
+          <div id="estadoGeneral" class="estado"></div>
         </div>
-        <div class="tabla-wrap"><table><thead><tr><th>Origen</th><th class="numero">Viajes remitos2</th><th class="numero">Liquidados</th><th class="numero">Ton. remitos2</th><th class="numero">Ton. liquidadas</th><th class="numero">Diferencia</th><th class="centro">Estado</th></tr></thead><tbody id="tablaControl"></tbody></table></div>
+
+        <div class="tarjetas">
+          <article class="tarjeta">
+            <div class="rotulo">Viajes remitos2</div>
+            <div class="valor" id="viajesRemitos2">0</div>
+          </article>
+
+          <article class="tarjeta">
+            <div class="rotulo">Viajes liquidados</div>
+            <div class="valor" id="viajesLiquidacion">0</div>
+          </article>
+
+          <article class="tarjeta">
+            <div class="rotulo">Diferencia de viajes</div>
+            <div class="valor" id="diferenciaViajes">0</div>
+          </article>
+
+          <article class="tarjeta">
+            <div class="rotulo">Diferencia de toneladas</div>
+            <div class="valor" id="diferenciaToneladas">
+              0,00
+            </div>
+          </article>
+        </div>
+
+        <div class="tabla-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Origen</th>
+                <th class="numero">Viajes remitos2</th>
+                <th class="numero">Liquidados</th>
+                <th class="numero">Ton. remitos2</th>
+                <th class="numero">Ton. liquidadas</th>
+                <th class="numero">Diferencia</th>
+                <th class="centro">Estado</th>
+              </tr>
+            </thead>
+
+            <tbody id="tablaControl"></tbody>
+          </table>
+        </div>
       </section>
 
       <section class="seccion">
-        <div class="titulo-fila"><h2>Registros a verificar</h2><div id="cantidadDiferencias"></div></div>
-        <div id="sinDiferencias" class="aviso ok">No existen diferencias para el período seleccionado.</div>
-        <div id="conDiferencias" class="tabla-wrap" hidden><table><thead><tr><th>Estado</th><th>Fecha</th><th>Remito</th><th>Origen</th><th>Remito origen</th><th>Matrícula</th><th class="numero">Ton. remitos2</th><th class="numero">Ton. liquidación</th><th class="numero">Diferencia</th></tr></thead><tbody id="tablaDiferencias"></tbody></table></div>
+        <div class="titulo-fila">
+          <h2>Registros a verificar</h2>
+          <div id="cantidadDiferencias"></div>
+        </div>
+
+        <div id="sinDiferencias" class="aviso ok">
+          No existen diferencias para el período seleccionado.
+        </div>
+
+        <div
+          id="conDiferencias"
+          class="tabla-wrap"
+          hidden
+        >
+          <table>
+            <thead>
+              <tr>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Remito</th>
+                <th>Origen</th>
+                <th>Remito origen</th>
+                <th>Matrícula</th>
+                <th class="numero">Ton. remitos2</th>
+                <th class="numero">Ton. liquidación</th>
+                <th class="numero">Diferencia</th>
+              </tr>
+            </thead>
+
+            <tbody id="tablaDiferencias"></tbody>
+          </table>
+        </div>
       </section>
 
       <section class="seccion">
-        <div class="titulo-fila"><h2>Importe por fletero y origen</h2></div>
+        <div class="titulo-fila">
+          <h2>Importe por fletero y origen</h2>
+        </div>
+
         <details class="resumen-desplegable">
-          <summary><div class="acumulado-info"><span class="rotulo">Importe flete acumulado</span><strong class="valor" id="importeAcumuladoFiltros">0,00</strong></div><span class="accion-desplegar" aria-hidden="true"></span></summary>
+          <summary>
+            <div class="acumulado-info">
+              <span class="rotulo">
+                Importe flete acumulado
+              </span>
+
+              <strong
+                class="valor"
+                id="importeAcumuladoFiltros"
+              >
+                0,00
+              </strong>
+            </div>
+
+            <span
+              class="accion-desplegar"
+              aria-hidden="true"
+            ></span>
+          </summary>
+
           <div>
-            <div class="resumen-cabecera"><h3>Resumen del período seleccionado</h3></div>
-            <div id="listaResumenFleteros" class="resumen-scroll"></div>
+            <div class="resumen-cabecera">
+              <h3>Resumen del período seleccionado</h3>
+            </div>
+
+            <div
+              id="listaResumenFleteros"
+              class="resumen-scroll"
+            ></div>
           </div>
         </details>
       </section>
 
       <section class="seccion">
-        <div class="titulo-fila"><h2>Importe por monte</h2></div>
+        <div class="titulo-fila">
+          <h2>Importe por monte</h2>
+        </div>
+
         <details class="resumen-desplegable">
-          <summary><div class="acumulado-info"><span class="rotulo">Importe flete acumulado</span><strong class="valor" id="importeAcumuladoMontes">0,00</strong></div><span class="accion-desplegar" aria-hidden="true"></span></summary>
+          <summary>
+            <div class="acumulado-info">
+              <span class="rotulo">
+                Importe flete acumulado
+              </span>
+
+              <strong
+                class="valor"
+                id="importeAcumuladoMontes"
+              >
+                0,00
+              </strong>
+            </div>
+
+            <span
+              class="accion-desplegar"
+              aria-hidden="true"
+            ></span>
+          </summary>
+
           <div>
-            <div class="resumen-cabecera"><h3>Acumulado por monte del período seleccionado</h3></div>
-            <div id="listaResumenMontes" class="resumen-scroll"></div>
+            <div class="resumen-cabecera">
+              <h3>
+                Acumulado por monte del período seleccionado
+              </h3>
+            </div>
+
+            <div
+              id="listaResumenMontes"
+              class="resumen-scroll"
+            ></div>
           </div>
         </details>
       </section>
 
       <section class="seccion">
-        <div class="titulo-fila"><h2>Detalle de fletes</h2><button type="button" id="exportarExcel" class="boton">Exportar XLSX</button></div>
-        <div id="scrollFletesSuperior" class="scroll-superior"><div id="scrollFletesContenido" class="scroll-superior-contenido"></div></div>
-        <div id="tablaFletesWrap" class="tabla-wrap"><table id="tablaFletesCompleta" class="tabla-fletes"><thead><tr id="encabezadosFletes"></tr></thead><tbody id="tablaFletes"></tbody></table></div>
-        <div class="pie-tabla"><span id="cantidadFletes"></span><div class="paginacion"><button type="button" id="paginaAnterior">Anterior</button><span id="paginaActual"></span><button type="button" id="paginaSiguiente">Siguiente</button></div></div>
+        <div class="titulo-fila">
+          <h2>Detalle de fletes</h2>
+
+          <button
+            type="button"
+            id="exportarExcel"
+            class="boton"
+          >
+            Exportar XLSX
+          </button>
+        </div>
+
+        <div
+          id="scrollFletesSuperior"
+          class="scroll-superior"
+        >
+          <div
+            id="scrollFletesContenido"
+            class="scroll-superior-contenido"
+          ></div>
+        </div>
+
+        <div
+          id="tablaFletesWrap"
+          class="tabla-wrap"
+        >
+          <table
+            id="tablaFletesCompleta"
+            class="tabla-fletes"
+          >
+            <thead>
+              <tr id="encabezadosFletes"></tr>
+            </thead>
+
+            <tbody id="tablaFletes"></tbody>
+          </table>
+        </div>
+
+        <div class="pie-tabla">
+          <span id="cantidadFletes"></span>
+
+          <div class="paginacion">
+            <button
+              type="button"
+              id="paginaAnterior"
+            >
+              Anterior
+            </button>
+
+            <span id="paginaActual"></span>
+
+            <button
+              type="button"
+              id="paginaSiguiente"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
       </section>
     </div>
   </main>
 
   <script>
-    const API_URL='https://dl.dropbox.com/scl/fi/p7nm1n8fhpwywmpsezgcm/LiquidacionFletes.json?rlkey=1ahcdu32o7s10icry9hllu81f&dl=1';
-    const FILAS_POR_PAGINA=100;
-    const COLUMNAS_PRIORITARIAS=[
-      'anio_liquidacion','mes_nombre','quincena','fecha_rto',
-      'tipo_remito','remito','nombre_empresa','origen','nombre_prod','remito_origen',
-      'nombre_fletero','matricula','fardos','bruto','tara','neto','importe_tarifa',
-      'fecha_vigencia','fecha_fin_tarifa','bruto_categoria_matricula','cat_matr_1',
-      'cat_matr_2','acoplado','cod_prod','deposito','pila_origen','bruto_mtop',
-      'neto_flete','importe_flete','paga_flete'
+    const API_URL = "/api/datos";
+    const FILAS_POR_PAGINA = 100;
+
+    const COLUMNAS_PRIORITARIAS = [
+      "anio_liquidacion",
+      "mes_nombre",
+      "quincena",
+      "fecha_rto",
+      "tipo_remito",
+      "remito",
+      "nombre_empresa",
+      "origen",
+      "nombre_prod",
+      "remito_origen",
+      "nombre_fletero",
+      "matricula",
+      "fardos",
+      "bruto",
+      "tara",
+      "neto",
+      "importe_tarifa",
+      "fecha_vigencia",
+      "fecha_fin_tarifa",
+      "bruto_categoria_matricula",
+      "cat_matr_1",
+      "cat_matr_2",
+      "acoplado",
+      "cod_prod",
+      "deposito",
+      "pila_origen",
+      "bruto_mtop",
+      "neto_flete",
+      "importe_flete",
+      "paga_flete"
     ];
-    const COLUMNAS_OCULTAS=['mes_liquidacion'];
-    const ETIQUETAS_COLUMNAS={anio_liquidacion:'AÑO',mes_nombre:'MES'};
-    let datos={control:[],diferencias:[],fletes:[],periodos:[]};
-    let fletesFiltrados=[];
-    let pagina=1;
-    const $=id=>document.getElementById(id);
-    const numero=v=>Number(v||0);
-    const entero=v=>numero(v).toLocaleString('es-UY',{maximumFractionDigits:0});
-    const decimal=(v,d=2)=>numero(v).toLocaleString('es-UY',{minimumFractionDigits:d,maximumFractionDigits:d});
-    const fecha=v=>{if(!v)return '—';const p=String(v).slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:v};
-    const texto=v=>v===null||v===undefined||v===''?'—':String(v);
-    const seguro=v=>texto(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-    const esRemitoEntrada=registro=>String(registro?.tipo_remito??'').trim().toUpperCase()==='ENTRADA';
-    const seleccion=()=>({anio:Number($('filtroAnio').value),mes:Number($('filtroMes').value),quincena:Number($('filtroQuincena').value)});
-    const coincidePeriodo=(r,s)=>Number(r.anio_liquidacion)===s.anio&&Number(r.mes_liquidacion)===s.mes&&Number(r.quincena)===s.quincena;
-    const obtenerColumnas=()=>{
-      if(!datos.fletes.length)return COLUMNAS_PRIORITARIAS;
-      const disponibles=[...new Set(datos.fletes.flatMap(registro=>Object.keys(registro)))].filter(columna=>!COLUMNAS_OCULTAS.includes(columna));
-      const principales=COLUMNAS_PRIORITARIAS.filter(columna=>disponibles.includes(columna));
-      const adicionales=disponibles.filter(columna=>!COLUMNAS_PRIORITARIAS.includes(columna));
-      return [...principales,...adicionales];
+
+    const COLUMNAS_OCULTAS = [
+      "mes_liquidacion"
+    ];
+
+    const ETIQUETAS_COLUMNAS = {
+      anio_liquidacion: "AÑO",
+      mes_nombre: "MES"
     };
-    const obtenerColumnasExcel=()=>{
-      const columnas=obtenerColumnas().filter(columna=>columna!=='deposito');
-      const posicionEmpresa=columnas.indexOf('nombre_empresa');
-      if(datos.fletes.some(registro=>Object.prototype.hasOwnProperty.call(registro,'deposito')))columnas.splice(posicionEmpresa>=0?posicionEmpresa+1:columnas.length,0,'deposito');
+
+    let datos = {
+      control: [],
+      diferencias: [],
+      fletes: [],
+      periodos: []
+    };
+
+    let fletesFiltrados = [];
+    let pagina = 1;
+
+    const $ = (id) => document.getElementById(id);
+
+    const numero = (valor) => Number(valor || 0);
+
+    const entero = (valor) =>
+      numero(valor).toLocaleString("es-UY", {
+        maximumFractionDigits: 0
+      });
+
+    const decimal = (valor, decimales = 2) =>
+      numero(valor).toLocaleString("es-UY", {
+        minimumFractionDigits: decimales,
+        maximumFractionDigits: decimales
+      });
+
+    const fecha = (valor) => {
+      if (!valor) {
+        return "—";
+      }
+
+      const partes = String(valor)
+        .slice(0, 10)
+        .split("-");
+
+      if (partes.length === 3) {
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+      }
+
+      return valor;
+    };
+
+    const texto = (valor) =>
+      valor === null ||
+      valor === undefined ||
+      valor === ""
+        ? "—"
+        : String(valor);
+
+    const seguro = (valor) =>
+      texto(valor).replace(
+        /[&<>'"]/g,
+        (caracter) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            "'": "&#39;",
+            '"': "&quot;"
+          })[caracter]
+      );
+
+    const esRemitoEntrada = (registro) =>
+      String(registro?.tipo_remito ?? "")
+        .trim()
+        .toUpperCase() === "ENTRADA";
+
+    const seleccion = () => ({
+      anio: Number($("filtroAnio").value),
+      mes: Number($("filtroMes").value),
+      quincena: Number($("filtroQuincena").value)
+    });
+
+    const coincidePeriodo = (registro, periodo) =>
+      Number(registro.anio_liquidacion) === periodo.anio &&
+      Number(registro.mes_liquidacion) === periodo.mes &&
+      Number(registro.quincena) === periodo.quincena;
+
+    const obtenerColumnas = () => {
+      if (!datos.fletes.length) {
+        return COLUMNAS_PRIORITARIAS;
+      }
+
+      const disponibles = [
+        ...new Set(
+          datos.fletes.flatMap((registro) =>
+            Object.keys(registro)
+          )
+        )
+      ].filter(
+        (columna) =>
+          !COLUMNAS_OCULTAS.includes(columna)
+      );
+
+      const principales =
+        COLUMNAS_PRIORITARIAS.filter(
+          (columna) => disponibles.includes(columna)
+        );
+
+      const adicionales = disponibles.filter(
+        (columna) =>
+          !COLUMNAS_PRIORITARIAS.includes(columna)
+      );
+
+      return [
+        ...principales,
+        ...adicionales
+      ];
+    };
+
+    const obtenerColumnasExcel = () => {
+      const columnas = obtenerColumnas().filter(
+        (columna) => columna !== "deposito"
+      );
+
+      const posicionEmpresa =
+        columnas.indexOf("nombre_empresa");
+
+      const existeDeposito = datos.fletes.some(
+        (registro) =>
+          Object.prototype.hasOwnProperty.call(
+            registro,
+            "deposito"
+          )
+      );
+
+      if (existeDeposito) {
+        columnas.splice(
+          posicionEmpresa >= 0
+            ? posicionEmpresa + 1
+            : columnas.length,
+          0,
+          "deposito"
+        );
+      }
+
       return columnas;
     };
-    const etiquetaColumna=columna=>ETIQUETAS_COLUMNAS[columna]||columna.replaceAll('_',' ').toUpperCase();
-    const claseColumna=columna=>{
-      if(['nombre_empresa','origen','nombre_fletero'].includes(columna))return ' class="col-texto-largo"';
-      if(columna==='deposito')return ' class="col-deposito"';
-      return '';
+
+    const etiquetaColumna = (columna) =>
+      ETIQUETAS_COLUMNAS[columna] ||
+      columna
+        .replaceAll("_", " ")
+        .toUpperCase();
+
+    const claseColumna = (columna) => {
+      if (
+        [
+          "nombre_empresa",
+          "origen",
+          "nombre_fletero"
+        ].includes(columna)
+      ) {
+        return ' class="col-texto-largo"';
+      }
+
+      if (columna === "deposito") {
+        return ' class="col-deposito"';
+      }
+
+      return "";
     };
-    function sincronizarBarrasFletes(){
-      const superior=$('scrollFletesSuperior'),contenido=$('scrollFletesContenido'),inferior=$('tablaFletesWrap'),tabla=$('tablaFletesCompleta');
-      contenido.style.width=`${tabla.scrollWidth}px`;
-      superior.scrollLeft=inferior.scrollLeft;
+
+    function sincronizarBarrasFletes() {
+      const superior = $("scrollFletesSuperior");
+      const contenido = $("scrollFletesContenido");
+      const inferior = $("tablaFletesWrap");
+      const tabla = $("tablaFletesCompleta");
+
+      contenido.style.width = `${tabla.scrollWidth}px`;
+      superior.scrollLeft = inferior.scrollLeft;
     }
 
-    function cargarCombos(){
-      const periodos=[...datos.periodos].sort((a,b)=>Number(b.anio_liquidacion)-Number(a.anio_liquidacion)||Number(b.mes_liquidacion)-Number(a.mes_liquidacion)||Number(b.quincena)-Number(a.quincena));
-      const anios=[...new Set(periodos.map(p=>Number(p.anio_liquidacion)))];
-      $('filtroAnio').innerHTML=anios.map(a=>`<option value="${a}">${a}</option>`).join('');
+    function cargarCombos() {
+      const periodos = [...datos.periodos].sort(
+        (a, b) =>
+          Number(b.anio_liquidacion) -
+            Number(a.anio_liquidacion) ||
+          Number(b.mes_liquidacion) -
+            Number(a.mes_liquidacion) ||
+          Number(b.quincena) -
+            Number(a.quincena)
+      );
+
+      const anios = [
+        ...new Set(
+          periodos.map((periodo) =>
+            Number(periodo.anio_liquidacion)
+          )
+        )
+      ];
+
+      $("filtroAnio").innerHTML = anios
+        .map(
+          (anio) =>
+            `<option value="${anio}">${anio}</option>`
+        )
+        .join("");
+
       actualizarMeses(false);
     }
-    function actualizarMeses(mantener=true){
-      const anio=Number($('filtroAnio').value);const previo=mantener?$('filtroMes').value:null;
-      const meses=[...new Map(datos.periodos.filter(p=>Number(p.anio_liquidacion)===anio).map(p=>[Number(p.mes_liquidacion),p.mes_nombre])).entries()].sort((a,b)=>b[0]-a[0]);
-      $('filtroMes').innerHTML=meses.map(([n,nombre])=>`<option value="${n}" ${String(n)===previo?'selected':''}>${seguro(nombre)}</option>`).join('');
+
+    function actualizarMeses(mantener = true) {
+      const anio = Number($("filtroAnio").value);
+
+      const previo = mantener
+        ? $("filtroMes").value
+        : null;
+
+      const meses = [
+        ...new Map(
+          datos.periodos
+            .filter(
+              (periodo) =>
+                Number(periodo.anio_liquidacion) ===
+                anio
+            )
+            .map((periodo) => [
+              Number(periodo.mes_liquidacion),
+              periodo.mes_nombre
+            ])
+        ).entries()
+      ].sort((a, b) => b[0] - a[0]);
+
+      $("filtroMes").innerHTML = meses
+        .map(
+          ([numeroMes, nombre]) =>
+            `<option value="${numeroMes}" ${
+              String(numeroMes) === previo
+                ? "selected"
+                : ""
+            }>${seguro(nombre)}</option>`
+        )
+        .join("");
+
       actualizarQuincenas(false);
     }
-    function actualizarQuincenas(mantener=true){
-      const anio=Number($('filtroAnio').value),mes=Number($('filtroMes').value),previo=mantener?$('filtroQuincena').value:null;
-      const qs=[...new Set(datos.periodos.filter(p=>Number(p.anio_liquidacion)===anio&&Number(p.mes_liquidacion)===mes).map(p=>Number(p.quincena)))].sort((a,b)=>b-a);
-      $('filtroQuincena').innerHTML=qs.map(q=>`<option value="${q}" ${String(q)===previo?'selected':''}>${q}.ª QUINCENA</option>`).join('');
+
+    function actualizarQuincenas(mantener = true) {
+      const anio = Number($("filtroAnio").value);
+      const mes = Number($("filtroMes").value);
+
+      const previo = mantener
+        ? $("filtroQuincena").value
+        : null;
+
+      const quincenas = [
+        ...new Set(
+          datos.periodos
+            .filter(
+              (periodo) =>
+                Number(periodo.anio_liquidacion) ===
+                  anio &&
+                Number(periodo.mes_liquidacion) ===
+                  mes
+            )
+            .map((periodo) =>
+              Number(periodo.quincena)
+            )
+        )
+      ].sort((a, b) => b - a);
+
+      $("filtroQuincena").innerHTML =
+        quincenas
+          .map(
+            (quincena) =>
+              `<option value="${quincena}" ${
+                String(quincena) === previo
+                  ? "selected"
+                  : ""
+              }>${quincena}.ª QUINCENA</option>`
+          )
+          .join("");
+
       aplicarFiltros();
     }
-    function aplicarFiltros(){
-      const s=seleccion();pagina=1;
-      const control=datos.control.filter(r=>coincidePeriodo(r,s));
-      const diferencias=datos.diferencias.filter(r=>coincidePeriodo(r,s));
-      const controlesEnCero=control.filter(r=>numero(r.toneladas_remitos2)<=0||numero(r.toneladas_liquidacion)<=0).map(r=>({...r,estado:numero(r.toneladas_remitos2)<=0&&numero(r.toneladas_liquidacion)<=0?'TONELADAS EN CERO':numero(r.toneladas_remitos2)<=0?'TONELADAS REMITOS2 EN CERO':'TONELADAS LIQUIDACIÓN EN CERO',fecha_rto:null,remito:'—',remito_origen:'—',matricula:'—'}));
-      const diferenciasVisibles=[...diferencias,...controlesEnCero.filter(c=>!diferencias.some(d=>String(d.origen)===String(c.origen)&&String(d.estado).includes('CERO')))];
-      fletesFiltrados=datos.fletes.filter(r=>coincidePeriodo(r,s));
-      renderControl(control,diferenciasVisibles);renderDiferencias(diferenciasVisibles);renderResumenFleteros();renderResumenMontes();renderFletes();
+
+    function aplicarFiltros() {
+      const periodo = seleccion();
+
+      pagina = 1;
+
+      const control = datos.control.filter(
+        (registro) =>
+          coincidePeriodo(registro, periodo)
+      );
+
+      const diferencias =
+        datos.diferencias.filter((registro) =>
+          coincidePeriodo(registro, periodo)
+        );
+
+      const controlesEnCero = control
+        .filter(
+          (registro) =>
+            numero(registro.toneladas_remitos2) <= 0 ||
+            numero(registro.toneladas_liquidacion) <= 0
+        )
+        .map((registro) => ({
+          ...registro,
+
+          estado:
+            numero(registro.toneladas_remitos2) <= 0 &&
+            numero(registro.toneladas_liquidacion) <= 0
+              ? "TONELADAS EN CERO"
+              : numero(registro.toneladas_remitos2) <= 0
+                ? "TONELADAS REMITOS2 EN CERO"
+                : "TONELADAS LIQUIDACIÓN EN CERO",
+
+          fecha_rto: null,
+          remito: "—",
+          remito_origen: "—",
+          matricula: "—"
+        }));
+
+      const diferenciasVisibles = [
+        ...diferencias,
+
+        ...controlesEnCero.filter(
+          (controlCero) =>
+            !diferencias.some(
+              (diferencia) =>
+                String(diferencia.origen) ===
+                  String(controlCero.origen) &&
+                String(diferencia.estado).includes(
+                  "CERO"
+                )
+            )
+        )
+      ];
+
+      fletesFiltrados = datos.fletes.filter(
+        (registro) =>
+          coincidePeriodo(registro, periodo)
+      );
+
+      renderControl(
+        control,
+        diferenciasVisibles
+      );
+
+      renderDiferencias(diferenciasVisibles);
+      renderResumenFleteros();
+      renderResumenMontes();
+      renderFletes();
     }
-    function renderControl(control,diferencias){
-      const vr=control.reduce((a,r)=>a+numero(r.viajes_remitos2),0),vl=control.reduce((a,r)=>a+numero(r.viajes_liquidacion),0),td=control.reduce((a,r)=>a+numero(r.diferencia_toneladas),0);
-      $('viajesRemitos2').textContent=entero(vr);$('viajesLiquidacion').textContent=entero(vl);$('diferenciaViajes').textContent=entero(vr-vl);$('diferenciaToneladas').textContent=decimal(td);
-      const ok=control.length>0&&vr>0&&vl>0&&diferencias.length===0&&vr===vl&&Math.abs(td)<=.05;$('estadoGeneral').textContent=ok?'● CONTINUAR':'● VERIFICAR';$('estadoGeneral').className=`estado ${ok?'ok':'error'}`;
-      $('tablaControl').innerHTML=control.map(r=>{const enCero=numero(r.toneladas_remitos2)<=0||numero(r.toneladas_liquidacion)<=0;const estado=enCero?(numero(r.toneladas_remitos2)<=0&&numero(r.toneladas_liquidacion)<=0?'TONELADAS EN CERO':numero(r.toneladas_remitos2)<=0?'TON. REMITOS2 EN CERO':'TON. LIQUIDACIÓN EN CERO'):r.estado;return `<tr><td>${seguro(r.origen)}</td><td class="numero">${entero(r.viajes_remitos2)}</td><td class="numero">${entero(r.viajes_liquidacion)}</td><td class="numero">${decimal(r.toneladas_remitos2)}</td><td class="numero">${decimal(r.toneladas_liquidacion)}</td><td class="numero">${decimal(r.diferencia_toneladas)}</td><td class="centro"><span class="etiqueta ${estado==='CONTINUAR'?'ok':'error'}">${seguro(estado)}</span></td></tr>`;}).join('')||'<tr><td colspan="7" class="centro">Sin datos para el período.</td></tr>';
+
+    function renderControl(control, diferencias) {
+      const viajesRemitos2 = control.reduce(
+        (total, registro) =>
+          total +
+          numero(registro.viajes_remitos2),
+        0
+      );
+
+      const viajesLiquidacion = control.reduce(
+        (total, registro) =>
+          total +
+          numero(registro.viajes_liquidacion),
+        0
+      );
+
+      const diferenciaToneladas = control.reduce(
+        (total, registro) =>
+          total +
+          numero(registro.diferencia_toneladas),
+        0
+      );
+
+      $("viajesRemitos2").textContent =
+        entero(viajesRemitos2);
+
+      $("viajesLiquidacion").textContent =
+        entero(viajesLiquidacion);
+
+      $("diferenciaViajes").textContent =
+        entero(
+          viajesRemitos2 - viajesLiquidacion
+        );
+
+      $("diferenciaToneladas").textContent =
+        decimal(diferenciaToneladas);
+
+      const puedeContinuar =
+        control.length > 0 &&
+        viajesRemitos2 > 0 &&
+        viajesLiquidacion > 0 &&
+        diferencias.length === 0 &&
+        viajesRemitos2 === viajesLiquidacion &&
+        Math.abs(diferenciaToneladas) <= 0.05;
+
+      $("estadoGeneral").textContent =
+        puedeContinuar
+          ? "● CONTINUAR"
+          : "● VERIFICAR";
+
+      $("estadoGeneral").className =
+        `estado ${
+          puedeContinuar
+            ? "ok"
+            : "error"
+        }`;
+
+      $("tablaControl").innerHTML =
+        control
+          .map((registro) => {
+            const enCero =
+              numero(
+                registro.toneladas_remitos2
+              ) <= 0 ||
+              numero(
+                registro.toneladas_liquidacion
+              ) <= 0;
+
+            let estado = registro.estado;
+
+            if (enCero) {
+              if (
+                numero(
+                  registro.toneladas_remitos2
+                ) <= 0 &&
+                numero(
+                  registro.toneladas_liquidacion
+                ) <= 0
+              ) {
+                estado = "TONELADAS EN CERO";
+              } else if (
+                numero(
+                  registro.toneladas_remitos2
+                ) <= 0
+              ) {
+                estado =
+                  "TON. REMITOS2 EN CERO";
+              } else {
+                estado =
+                  "TON. LIQUIDACIÓN EN CERO";
+              }
+            }
+
+            return `
+              <tr>
+                <td>${seguro(registro.origen)}</td>
+
+                <td class="numero">
+                  ${entero(
+                    registro.viajes_remitos2
+                  )}
+                </td>
+
+                <td class="numero">
+                  ${entero(
+                    registro.viajes_liquidacion
+                  )}
+                </td>
+
+                <td class="numero">
+                  ${decimal(
+                    registro.toneladas_remitos2
+                  )}
+                </td>
+
+                <td class="numero">
+                  ${decimal(
+                    registro.toneladas_liquidacion
+                  )}
+                </td>
+
+                <td class="numero">
+                  ${decimal(
+                    registro.diferencia_toneladas
+                  )}
+                </td>
+
+                <td class="centro">
+                  <span class="etiqueta ${
+                    estado === "CONTINUAR"
+                      ? "ok"
+                      : "error"
+                  }">
+                    ${seguro(estado)}
+                  </span>
+                </td>
+              </tr>
+            `;
+          })
+          .join("") ||
+        `
+          <tr>
+            <td colspan="7" class="centro">
+              Sin datos para el período.
+            </td>
+          </tr>
+        `;
     }
-    function renderDiferencias(lista){
-      $('cantidadDiferencias').textContent=`${entero(lista.length)} registros`;$('sinDiferencias').hidden=lista.length>0;$('conDiferencias').hidden=lista.length===0;
-      $('tablaDiferencias').innerHTML=lista.map(r=>`<tr><td><span class="etiqueta error">${seguro(r.estado)}</span></td><td>${fecha(r.fecha_rto)}</td><td>${seguro(r.remito)}</td><td>${seguro(r.origen)}</td><td>${seguro(r.remito_origen)}</td><td>${seguro(r.matricula)}</td><td class="numero">${decimal(r.toneladas_remitos2)}</td><td class="numero">${decimal(r.toneladas_liquidacion)}</td><td class="numero">${decimal(r.diferencia_toneladas)}</td></tr>`).join('');
+
+    function renderDiferencias(lista) {
+      $("cantidadDiferencias").textContent =
+        `${entero(lista.length)} registros`;
+
+      $("sinDiferencias").hidden =
+        lista.length > 0;
+
+      $("conDiferencias").hidden =
+        lista.length === 0;
+
+      $("tablaDiferencias").innerHTML =
+        lista
+          .map(
+            (registro) => `
+              <tr>
+                <td>
+                  <span class="etiqueta error">
+                    ${seguro(registro.estado)}
+                  </span>
+                </td>
+
+                <td>
+                  ${fecha(registro.fecha_rto)}
+                </td>
+
+                <td>
+                  ${seguro(registro.remito)}
+                </td>
+
+                <td>
+                  ${seguro(registro.origen)}
+                </td>
+
+                <td>
+                  ${seguro(registro.remito_origen)}
+                </td>
+
+                <td>
+                  ${seguro(registro.matricula)}
+                </td>
+
+                <td class="numero">
+                  ${decimal(
+                    registro.toneladas_remitos2
+                  )}
+                </td>
+
+                <td class="numero">
+                  ${decimal(
+                    registro.toneladas_liquidacion
+                  )}
+                </td>
+
+                <td class="numero">
+                  ${decimal(
+                    registro.diferencia_toneladas
+                  )}
+                </td>
+              </tr>
+            `
+          )
+          .join("");
     }
-    function renderResumenFleteros(){
-      const grupos=new Map();
-      for(const registro of fletesFiltrados){
-        const fletero=texto(registro.nombre_fletero),origen=texto(registro.origen),importe=numero(registro.importe_flete);
-        const actual=grupos.get(fletero)||{fletero,total:0,origenes:new Map()};
-        actual.total+=importe;actual.origenes.set(origen,(actual.origenes.get(origen)||0)+importe);grupos.set(fletero,actual);
+
+    function renderResumenFleteros() {
+      const grupos = new Map();
+
+      for (const registro of fletesFiltrados) {
+        const fletero =
+          texto(registro.nombre_fletero);
+
+        const origen =
+          texto(registro.origen);
+
+        const importe =
+          numero(registro.importe_flete);
+
+        const actual =
+          grupos.get(fletero) || {
+            fletero,
+            total: 0,
+            origenes: new Map()
+          };
+
+        actual.total += importe;
+
+        actual.origenes.set(
+          origen,
+          (actual.origenes.get(origen) || 0) +
+            importe
+        );
+
+        grupos.set(fletero, actual);
       }
-      const fleteros=[...grupos.values()].sort((a,b)=>a.fletero.localeCompare(b.fletero,'es',{sensitivity:'base'}));
-      const total=fleteros.reduce((suma,fletero)=>suma+fletero.total,0);
-      $('importeAcumuladoFiltros').textContent=decimal(total);
-      $('listaResumenFleteros').innerHTML=fleteros.map(fletero=>{
-        const origenes=[...fletero.origenes.entries()].sort((a,b)=>a[0].localeCompare(b[0],'es',{sensitivity:'base'}));
-        return `<details class="fletero-grupo"><summary><span>${seguro(fletero.fletero)}</span><span class="fletero-importe">${decimal(fletero.total)}</span><span class="fletero-flecha" aria-hidden="true"></span></summary><div class="tabla-wrap"><table class="tabla-origenes"><thead><tr><th>Origen</th><th class="numero">Suma importe flete</th></tr></thead><tbody>${origenes.map(([origen,importe])=>`<tr><td>${seguro(origen)}</td><td class="numero">${decimal(importe)}</td></tr>`).join('')}</tbody></table></div></details>`;
-      }).join('')||'<div class="aviso ok">Sin importes para el período.</div>';
+
+      const fleteros = [
+        ...grupos.values()
+      ].sort((a, b) =>
+        a.fletero.localeCompare(
+          b.fletero,
+          "es",
+          {
+            sensitivity: "base"
+          }
+        )
+      );
+
+      const total = fleteros.reduce(
+        (suma, fletero) =>
+          suma + fletero.total,
+        0
+      );
+
+      $("importeAcumuladoFiltros").textContent =
+        decimal(total);
+
+      $("listaResumenFleteros").innerHTML =
+        fleteros
+          .map((fletero) => {
+            const origenes = [
+              ...fletero.origenes.entries()
+            ].sort((a, b) =>
+              a[0].localeCompare(
+                b[0],
+                "es",
+                {
+                  sensitivity: "base"
+                }
+              )
+            );
+
+            return `
+              <details class="fletero-grupo">
+                <summary>
+                  <span>
+                    ${seguro(fletero.fletero)}
+                  </span>
+
+                  <span class="fletero-importe">
+                    ${decimal(fletero.total)}
+                  </span>
+
+                  <span
+                    class="fletero-flecha"
+                    aria-hidden="true"
+                  ></span>
+                </summary>
+
+                <div class="tabla-wrap">
+                  <table class="tabla-origenes">
+                    <thead>
+                      <tr>
+                        <th>Origen</th>
+                        <th class="numero">
+                          Suma importe flete
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      ${origenes
+                        .map(
+                          ([origen, importe]) => `
+                            <tr>
+                              <td>
+                                ${seguro(origen)}
+                              </td>
+
+                              <td class="numero">
+                                ${decimal(importe)}
+                              </td>
+                            </tr>
+                          `
+                        )
+                        .join("")}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            `;
+          })
+          .join("") ||
+        `
+          <div class="aviso ok">
+            Sin importes para el período.
+          </div>
+        `;
     }
-    function renderResumenMontes(){
-      const montes=new Map();
-      for(const registro of fletesFiltrados){
-        const monte=texto(registro.origen);
-        montes.set(monte,(montes.get(monte)||0)+numero(registro.importe_flete));
+
+    function renderResumenMontes() {
+      const montes = new Map();
+
+      for (const registro of fletesFiltrados) {
+        const monte = texto(registro.origen);
+
+        montes.set(
+          monte,
+          (montes.get(monte) || 0) +
+            numero(registro.importe_flete)
+        );
       }
-      const filas=[...montes.entries()].sort((a,b)=>a[0].localeCompare(b[0],'es',{sensitivity:'base'}));
-      const total=filas.reduce((suma,[,importe])=>suma+importe,0);
-      $('importeAcumuladoMontes').textContent=decimal(total);
-      $('listaResumenMontes').innerHTML=filas.map(([monte,importe])=>`<div class="monte-fila"><span class="monte-nombre">${seguro(monte)}</span><span class="monte-importe">${decimal(importe)}</span></div>`).join('')||'<div class="aviso ok">Sin importes para el período.</div>';
+
+      const filas = [
+        ...montes.entries()
+      ].sort((a, b) =>
+        a[0].localeCompare(
+          b[0],
+          "es",
+          {
+            sensitivity: "base"
+          }
+        )
+      );
+
+      const total = filas.reduce(
+        (suma, fila) =>
+          suma + fila[1],
+        0
+      );
+
+      $("importeAcumuladoMontes").textContent =
+        decimal(total);
+
+      $("listaResumenMontes").innerHTML =
+        filas
+          .map(
+            ([monte, importe]) => `
+              <div class="monte-fila">
+                <span class="monte-nombre">
+                  ${seguro(monte)}
+                </span>
+
+                <span class="monte-importe">
+                  ${decimal(importe)}
+                </span>
+              </div>
+            `
+          )
+          .join("") ||
+        `
+          <div class="aviso ok">
+            Sin importes para el período.
+          </div>
+        `;
     }
-    function renderFletes(){
-      const ordenados=[...fletesFiltrados].sort((a,b)=>Number(String(a.remito??'').replace(/\D/g,''))-Number(String(b.remito??'').replace(/\D/g,'')));
-      const totalPaginas=Math.max(1,Math.ceil(ordenados.length/FILAS_POR_PAGINA));pagina=Math.min(pagina,totalPaginas);const inicio=(pagina-1)*FILAS_POR_PAGINA;const visibles=ordenados.slice(inicio,inicio+FILAS_POR_PAGINA);
-      const columnas=obtenerColumnas();
-      $('encabezadosFletes').innerHTML=columnas.map(columna=>`<th${claseColumna(columna)}>${seguro(etiquetaColumna(columna))}</th>`).join('');
-      const mostrarValor=(valor,columna)=>{if(valor===null||valor===undefined||valor==='')return '—';if(columna==='anio_liquidacion'||columna==='remito')return String(valor).replace(/[.\s]/g,'');if(columna.includes('fecha'))return fecha(valor);if(typeof valor==='number')return valor.toLocaleString('es-UY',{maximumFractionDigits:3});return texto(valor);};
-      $('tablaFletes').innerHTML=visibles.map(r=>`<tr>${columnas.map(columna=>`<td${claseColumna(columna)}>${seguro(mostrarValor(r[columna],columna))}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${Math.max(1,columnas.length)}" class="centro">Sin fletes para el período.</td></tr>`;
-      $('cantidadFletes').textContent=`${entero(fletesFiltrados.length)} fletes filtrados`;$('paginaActual').textContent=`Página ${pagina} de ${totalPaginas}`;$('paginaAnterior').disabled=pagina<=1;$('paginaSiguiente').disabled=pagina>=totalPaginas;$('exportarExcel').disabled=fletesFiltrados.length===0;
-      requestAnimationFrame(sincronizarBarrasFletes);
+
+    function renderFletes() {
+      const ordenados = [
+        ...fletesFiltrados
+      ].sort((a, b) => {
+        const remitoA = Number(
+          String(a.remito ?? "")
+            .replace(/\D/g, "")
+        );
+
+        const remitoB = Number(
+          String(b.remito ?? "")
+            .replace(/\D/g, "")
+        );
+
+        return remitoA - remitoB;
+      });
+
+      const totalPaginas = Math.max(
+        1,
+        Math.ceil(
+          ordenados.length /
+            FILAS_POR_PAGINA
+        )
+      );
+
+      pagina = Math.min(
+        pagina,
+        totalPaginas
+      );
+
+      const inicio =
+        (pagina - 1) *
+        FILAS_POR_PAGINA;
+
+      const visibles = ordenados.slice(
+        inicio,
+        inicio + FILAS_POR_PAGINA
+      );
+
+      const columnas = obtenerColumnas();
+
+      $("encabezadosFletes").innerHTML =
+        columnas
+          .map(
+            (columna) =>
+              `<th${claseColumna(columna)}>${
+                seguro(
+                  etiquetaColumna(columna)
+                )
+              }</th>`
+          )
+          .join("");
+
+      const mostrarValor = (
+        valor,
+        columna
+      ) => {
+        if (
+          valor === null ||
+          valor === undefined ||
+          valor === ""
+        ) {
+          return "—";
+        }
+
+        if (
+          columna === "anio_liquidacion" ||
+          columna === "remito"
+        ) {
+          return String(valor).replace(
+            /[.\s]/g,
+            ""
+          );
+        }
+
+        if (columna.includes("fecha")) {
+          return fecha(valor);
+        }
+
+        if (typeof valor === "number") {
+          return valor.toLocaleString(
+            "es-UY",
+            {
+              maximumFractionDigits: 3
+            }
+          );
+        }
+
+        return texto(valor);
+      };
+
+      $("tablaFletes").innerHTML =
+        visibles
+          .map(
+            (registro) => `
+              <tr>
+                ${columnas
+                  .map(
+                    (columna) => `
+                      <td${claseColumna(columna)}>
+                        ${seguro(
+                          mostrarValor(
+                            registro[columna],
+                            columna
+                          )
+                        )}
+                      </td>
+                    `
+                  )
+                  .join("")}
+              </tr>
+            `
+          )
+          .join("") ||
+        `
+          <tr>
+            <td
+              colspan="${Math.max(
+                1,
+                columnas.length
+              )}"
+              class="centro"
+            >
+              Sin fletes para el período.
+            </td>
+          </tr>
+        `;
+
+      $("cantidadFletes").textContent =
+        `${entero(
+          fletesFiltrados.length
+        )} fletes filtrados`;
+
+      $("paginaActual").textContent =
+        `Página ${pagina} de ${totalPaginas}`;
+
+      $("paginaAnterior").disabled =
+        pagina <= 1;
+
+      $("paginaSiguiente").disabled =
+        pagina >= totalPaginas;
+
+      $("exportarExcel").disabled =
+        fletesFiltrados.length === 0;
+
+      requestAnimationFrame(
+        sincronizarBarrasFletes
+      );
     }
-    function exportarXlsx(){
-      if(!window.XLSX){alert('No fue posible cargar el exportador de Excel.');return;}const s=seleccion();
-      const columnas=obtenerColumnasExcel();
-      const columnasFecha=['fecha_rto','fecha_vigencia','fecha_fin_tarifa'];
-      const columnasMiles=['bruto','tara','neto','importe_tarifa','bruto_categoria_matricula','bruto_mtop','neto_flete'];
-      const convertirNumero=valor=>{
-        if(valor===null||valor===undefined||valor==='')return null;
-        if(typeof valor==='number')return valor;
-        const limpio=String(valor).trim().replace(/\s/g,'');
-        if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(limpio))return Number(limpio.replace(/\./g,'').replace(',','.'));
-        return Number(limpio.replace(',','.'));
+
+    function exportarXlsx() {
+      if (!window.XLSX) {
+        alert(
+          "No fue posible cargar el exportador de Excel."
+        );
+
+        return;
+      }
+
+      const periodo = seleccion();
+      const columnas = obtenerColumnasExcel();
+
+      const columnasFecha = [
+        "fecha_rto",
+        "fecha_vigencia",
+        "fecha_fin_tarifa"
+      ];
+
+      const columnasMiles = [
+        "bruto",
+        "tara",
+        "neto",
+        "importe_tarifa",
+        "bruto_categoria_matricula",
+        "bruto_mtop",
+        "neto_flete"
+      ];
+
+      const convertirNumero = (valor) => {
+        if (
+          valor === null ||
+          valor === undefined ||
+          valor === ""
+        ) {
+          return null;
+        }
+
+        if (typeof valor === "number") {
+          return valor;
+        }
+
+        const limpio = String(valor)
+          .trim()
+          .replace(/\s/g, "");
+
+        if (
+          /^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(
+            limpio
+          )
+        ) {
+          return Number(
+            limpio
+              .replace(/\./g, "")
+              .replace(",", ".")
+          );
+        }
+
+        return Number(
+          limpio.replace(",", ".")
+        );
       };
-      const convertirFecha=valor=>{
-        if(!valor)return null;if(valor instanceof Date)return valor;
-        const partes=String(valor).slice(0,10).split('-').map(Number);
-        return partes.length===3&&partes.every(Number.isFinite)?new Date(partes[0],partes[1]-1,partes[2]):valor;
+
+      const convertirFecha = (valor) => {
+        if (!valor) {
+          return null;
+        }
+
+        if (valor instanceof Date) {
+          return valor;
+        }
+
+        const partes = String(valor)
+          .slice(0, 10)
+          .split("-")
+          .map(Number);
+
+        if (
+          partes.length === 3 &&
+          partes.every(Number.isFinite)
+        ) {
+          return new Date(
+            partes[0],
+            partes[1] - 1,
+            partes[2]
+          );
+        }
+
+        return valor;
       };
-      const valorExcel=(valor,columna)=>{
-        if(columnasFecha.includes(columna))return convertirFecha(valor);
-        if(columna==='remito_origen'||columna==='importe_flete'||columnasMiles.includes(columna))return convertirNumero(valor);
-        return valor??'';
+
+      const valorExcel = (
+        valor,
+        columna
+      ) => {
+        if (columnasFecha.includes(columna)) {
+          return convertirFecha(valor);
+        }
+
+        if (
+          columna === "remito_origen" ||
+          columna === "importe_flete" ||
+          columnasMiles.includes(columna)
+        ) {
+          return convertirNumero(valor);
+        }
+
+        return valor ?? "";
       };
-      const filas=fletesFiltrados.map(registro=>Object.fromEntries(columnas.map(columna=>[columna,valorExcel(registro[columna],columna)])));
-      const encabezados=columnas.map(etiquetaColumna);
-      const matriz=[encabezados,...filas.map(fila=>columnas.map(columna=>fila[columna]))];
-      const hoja=XLSX.utils.aoa_to_sheet(matriz,{cellDates:true});
-      const aplicarFormato=(columna,formato)=>{
-        const indice=columnas.indexOf(columna);if(indice<0)return;
-        for(let fila=1;fila<=filas.length;fila++){const celda=hoja[XLSX.utils.encode_cell({r:fila,c:indice})];if(celda)celda.z=formato;}
+
+      const fletesOrdenados = [
+        ...fletesFiltrados
+      ].sort((a, b) => {
+        const remitoA = Number(
+          String(a.remito ?? "")
+            .replace(/\D/g, "")
+        );
+
+        const remitoB = Number(
+          String(b.remito ?? "")
+            .replace(/\D/g, "")
+        );
+
+        return remitoA - remitoB;
+      });
+
+      const filas = fletesOrdenados.map(
+        (registro) =>
+          Object.fromEntries(
+            columnas.map((columna) => [
+              columna,
+              valorExcel(
+                registro[columna],
+                columna
+              )
+            ])
+          )
+      );
+
+      const encabezados =
+        columnas.map(etiquetaColumna);
+
+      const matriz = [
+        encabezados,
+
+        ...filas.map((fila) =>
+          columnas.map(
+            (columna) => fila[columna]
+          )
+        )
+      ];
+
+      const hoja =
+        XLSX.utils.aoa_to_sheet(
+          matriz,
+          {
+            cellDates: true
+          }
+        );
+
+      const aplicarFormato = (
+        columna,
+        formato
+      ) => {
+        const indice =
+          columnas.indexOf(columna);
+
+        if (indice < 0) {
+          return;
+        }
+
+        for (
+          let fila = 1;
+          fila <= filas.length;
+          fila++
+        ) {
+          const referencia =
+            XLSX.utils.encode_cell({
+              r: fila,
+              c: indice
+            });
+
+          const celda = hoja[referencia];
+
+          if (celda) {
+            celda.z = formato;
+          }
+        }
       };
-      columnasFecha.forEach(columna=>aplicarFormato(columna,'dd/mm/yyyy'));
-      aplicarFormato('remito_origen','0');
-      columnasMiles.forEach(columna=>aplicarFormato(columna,'#,##0'));
-      aplicarFormato('importe_flete','#,##0.00');
-      hoja['!cols']=columnas.map(columna=>({wch:columnasFecha.includes(columna)?12:Math.min(45,Math.max(columna.length+2,...filas.slice(0,500).map(fila=>String(fila[columna]??'').length+2)))}));
-      const libro=XLSX.utils.book_new();XLSX.utils.book_append_sheet(libro,hoja,'Fletes');XLSX.writeFile(libro,`Fletes_${s.anio}_${String(s.mes).padStart(2,'0')}_Q${s.quincena}.xlsx`);
+
+      columnasFecha.forEach(
+        (columna) =>
+          aplicarFormato(
+            columna,
+            "dd/mm/yyyy"
+          )
+      );
+
+      aplicarFormato(
+        "remito_origen",
+        "0"
+      );
+
+      columnasMiles.forEach(
+        (columna) =>
+          aplicarFormato(
+            columna,
+            "#,##0"
+          )
+      );
+
+      aplicarFormato(
+        "importe_flete",
+        "#,##0.00"
+      );
+
+      hoja["!cols"] = columnas.map(
+        (columna) => ({
+          wch: columnasFecha.includes(
+            columna
+          )
+            ? 12
+            : Math.min(
+                45,
+                Math.max(
+                  columna.length + 2,
+
+                  ...filas
+                    .slice(0, 500)
+                    .map(
+                      (fila) =>
+                        String(
+                          fila[columna] ?? ""
+                        ).length + 2
+                    )
+                )
+              )
+        })
+      );
+
+      const libro =
+        XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(
+        libro,
+        hoja,
+        "Fletes"
+      );
+
+      XLSX.writeFile(
+        libro,
+        `Fletes_${periodo.anio}_${String(
+          periodo.mes
+        ).padStart(2, "0")}_Q${
+          periodo.quincena
+        }.xlsx`
+      );
     }
-    async function iniciar(){
-      try{const respuesta=await fetch(API_URL,{cache:'no-store'});if(!respuesta.ok)throw new Error(`Error ${respuesta.status}`);const recibido=await respuesta.json();const fletesEntrada=(Array.isArray(recibido.fletes)?recibido.fletes:[]).filter(esRemitoEntrada);datos={control:Array.isArray(recibido.control)?recibido.control:[],diferencias:Array.isArray(recibido.diferencias)?recibido.diferencias:[],fletes:fletesEntrada,periodos:Array.isArray(recibido.periodos)?recibido.periodos:[]};if(!datos.periodos.length)throw new Error('El JSON no contiene períodos.');$('actualizado').textContent=`Actualizado: ${texto(recibido.fecha_actualizacion)}`;cargarCombos();$('cargando').hidden=true;$('contenido').hidden=false;
-      }catch(error){$('cargando').hidden=true;$('errorCarga').hidden=false;$('errorCarga').textContent=`No fue posible cargar los datos. ${error.message}`;}}
-    $('filtroAnio').addEventListener('change',()=>actualizarMeses(false));$('filtroMes').addEventListener('change',()=>actualizarQuincenas(false));$('filtroQuincena').addEventListener('change',aplicarFiltros);$('paginaAnterior').addEventListener('click',()=>{if(pagina>1){pagina--;renderFletes();}});$('paginaSiguiente').addEventListener('click',()=>{if(pagina*FILAS_POR_PAGINA<fletesFiltrados.length){pagina++;renderFletes();}});$('exportarExcel').addEventListener('click',exportarXlsx);$('scrollFletesSuperior').addEventListener('scroll',()=>{$('tablaFletesWrap').scrollLeft=$('scrollFletesSuperior').scrollLeft;});$('tablaFletesWrap').addEventListener('scroll',()=>{$('scrollFletesSuperior').scrollLeft=$('tablaFletesWrap').scrollLeft;});window.addEventListener('resize',sincronizarBarrasFletes);iniciar();
+
+    async function iniciar() {
+      try {
+        const respuesta = await fetch(
+          API_URL,
+          {
+            cache: "no-store"
+          }
+        );
+
+        if (!respuesta.ok) {
+          throw new Error(
+            `Error ${respuesta.status}`
+          );
+        }
+
+        const recibido =
+          await respuesta.json();
+
+        const fletesEntrada = (
+          Array.isArray(recibido.fletes)
+            ? recibido.fletes
+            : []
+        ).filter(esRemitoEntrada);
+
+        datos = {
+          control: Array.isArray(
+            recibido.control
+          )
+            ? recibido.control
+            : [],
+
+          diferencias: Array.isArray(
+            recibido.diferencias
+          )
+            ? recibido.diferencias
+            : [],
+
+          fletes: fletesEntrada,
+
+          periodos: Array.isArray(
+            recibido.periodos
+          )
+            ? recibido.periodos
+            : []
+        };
+
+        if (!datos.periodos.length) {
+          throw new Error(
+            "El JSON no contiene períodos."
+          );
+        }
+
+        $("actualizado").textContent =
+          `Actualizado: ${texto(
+            recibido.fecha_actualizacion
+          )}`;
+
+        cargarCombos();
+
+        $("cargando").hidden = true;
+        $("contenido").hidden = false;
+      } catch (error) {
+        $("cargando").hidden = true;
+        $("errorCarga").hidden = false;
+
+        $("errorCarga").textContent =
+          `No fue posible cargar los datos. ${error.message}`;
+      }
+    }
+
+    $("filtroAnio").addEventListener(
+      "change",
+      () => actualizarMeses(false)
+    );
+
+    $("filtroMes").addEventListener(
+      "change",
+      () => actualizarQuincenas(false)
+    );
+
+    $("filtroQuincena").addEventListener(
+      "change",
+      aplicarFiltros
+    );
+
+    $("paginaAnterior").addEventListener(
+      "click",
+      () => {
+        if (pagina > 1) {
+          pagina--;
+          renderFletes();
+        }
+      }
+    );
+
+    $("paginaSiguiente").addEventListener(
+      "click",
+      () => {
+        if (
+          pagina * FILAS_POR_PAGINA <
+          fletesFiltrados.length
+        ) {
+          pagina++;
+          renderFletes();
+        }
+      }
+    );
+
+    $("exportarExcel").addEventListener(
+      "click",
+      exportarXlsx
+    );
+
+    $("scrollFletesSuperior").addEventListener(
+      "scroll",
+      () => {
+        $("tablaFletesWrap").scrollLeft =
+          $("scrollFletesSuperior").scrollLeft;
+      }
+    );
+
+    $("tablaFletesWrap").addEventListener(
+      "scroll",
+      () => {
+        $("scrollFletesSuperior").scrollLeft =
+          $("tablaFletesWrap").scrollLeft;
+      }
+    );
+
+    window.addEventListener(
+      "resize",
+      sincronizarBarrasFletes
+    );
+
+    iniciar();
   </script>
 </body>
 </html>
