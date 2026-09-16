@@ -679,6 +679,7 @@
             <thead>
               <tr>
                 <th>Origen</th>
+                <th class="numero">Importe tarifa</th>
                 <th class="numero">Viajes remitos2</th>
                 <th class="numero">Liquidados</th>
                 <th class="numero">Ton. remitos2</th>
@@ -1265,6 +1266,26 @@
     }
 
     function renderControl(control, diferencias) {
+      const tarifaPorOrigen = new Map();
+
+      for (const registro of fletesFiltrados) {
+        const origen = String(registro.origen ?? "")
+          .trim()
+          .toLocaleUpperCase("es-UY");
+
+        const tarifa = registro.importe_tarifa;
+
+        if (
+          origen &&
+          !tarifaPorOrigen.has(origen) &&
+          tarifa !== null &&
+          tarifa !== undefined &&
+          tarifa !== ""
+        ) {
+          tarifaPorOrigen.set(origen, numero(tarifa));
+        }
+      }
+
       const viajesRemitos2 = control.reduce(
         (total, registro) =>
           total +
@@ -1323,6 +1344,13 @@
       $("tablaControl").innerHTML =
         control
           .map((registro) => {
+            const claveOrigen = String(registro.origen ?? "")
+              .trim()
+              .toLocaleUpperCase("es-UY");
+
+            const importeTarifa =
+              tarifaPorOrigen.get(claveOrigen);
+
             const enCero =
               numero(
                 registro.toneladas_remitos2
@@ -1359,6 +1387,14 @@
             return `
               <tr>
                 <td>${seguro(registro.origen)}</td>
+
+                <td class="numero">
+                  ${
+                    importeTarifa === undefined
+                      ? "—"
+                      : entero(importeTarifa)
+                  }
+                </td>
 
                 <td class="numero">
                   ${entero(
@@ -1405,7 +1441,7 @@
           .join("") ||
         `
           <tr>
-            <td colspan="7" class="centro">
+            <td colspan="8" class="centro">
               Sin datos para el período.
             </td>
           </tr>
